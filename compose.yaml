@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: 'postgres:17.0'
+    container_name: 'inbest-db'
+    environment:
+      - 'POSTGRES_DB=inbestDB'
+      - 'POSTGRES_PASSWORD=inbest'
+      - 'POSTGRES_USER=inbest'
+    ports:
+      - '5432'
