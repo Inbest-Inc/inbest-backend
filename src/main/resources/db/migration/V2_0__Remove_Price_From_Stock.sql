@@ -1,0 +1,2 @@
+ALTER TABLE Stock
+DROP COLUMN Price;
