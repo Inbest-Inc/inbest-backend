@@ -26,8 +26,7 @@ public class StockService
     }
 
     /*
-        Description: getHistoricalData method is used to get historical data for the list of tickers over the last 3 months
-        Param : List of tickers
+        Description: getHistoricalData method is used to get historical data for the list of tickers over the last 3 months.
     */
     public Mono<Map<String, Object>> getHistoricalData()
     {
