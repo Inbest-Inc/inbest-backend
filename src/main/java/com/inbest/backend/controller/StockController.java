@@ -1,37 +1,24 @@
 package com.inbest.backend.controller;
 
 import com.inbest.backend.service.StockService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-public class StockController
-{
-    @Autowired
+@RequestMapping("/api/stock")
+@RequiredArgsConstructor
+public class StockController {
     private final StockService stockService;
 
-    public StockController(StockService stockService)
-    {
-        this.stockService = stockService;
+    @GetMapping("/data")
+    public ResponseEntity<?> getHistoricalData() {
+        List<Map<String, Object>> data = stockService.getHistoricalData();
+        return ResponseEntity.ok(Map.of("result", data));
     }
-
-    @GetMapping("/stock")
-    public Mono<ResponseEntity<Map<String, Object>>> getHistoricalData()
-    {
-        return stockService.getHistoricalData()
-                .map(ResponseEntity::ok)
-                .onErrorResume(error -> {
-                    Map<String, Object> errorResponse = Map.of(
-                            "error", "Failed to get stock data",
-                            "message", error.getMessage()
-                    );
-                    return Mono.just(ResponseEntity.badRequest().body(errorResponse));
-                });
-    }
-
 }
