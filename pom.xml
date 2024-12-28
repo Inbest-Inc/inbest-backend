@@ -99,12 +99,6 @@
 			<version>11.0.1</version>
 		</dependency>
 
-		<!-- Spring Webflux (Optional, Non-blocking I/O) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
-		</dependency>
-
 		<!-- JWT Dependencies -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

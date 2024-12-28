@@ -26,11 +26,10 @@ public class StockService {
         );
 
         LocalDate today = LocalDate.now();
-        LocalDate threeMonthsAgo = today.minusDays(90);
+        LocalDate yesterday = LocalDate.now();
 
-        long startTime = threeMonthsAgo.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+        long startTime = yesterday.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
         long endTime = today.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
-
         List<Map<String, Object>> stockData = new ArrayList<>();
 
         for (String ticker : sp500Tickers) {
@@ -68,24 +67,14 @@ public class StockService {
 
                 if (quotes != null && !quotes.isEmpty()) {
                     Map<String, Object> quote = quotes.get(0);
-                    List<Double> open = (List<Double>) quote.get("open");
-                    List<Double> high = (List<Double>) quote.get("high");
-                    List<Double> low = (List<Double>) quote.get("low");
                     List<Double> close = (List<Double>) quote.get("close");
 
-                    List<Map<String, Object>> historicalData = new ArrayList<>();
-                    for (int i = 0; i < timestamps.size(); i++) {
-                        Map<String, Object> tickerData = new HashMap<>();
-                        tickerData.put("date", Instant.ofEpochSecond(timestamps.get(i).longValue())
-                                .atZone(ZoneId.systemDefault()).toLocalDate());
-                        tickerData.put("open", open.get(i));
-                        tickerData.put("high", high.get(i));
-                        tickerData.put("low", low.get(i));
-                        tickerData.put("close", close.get(i));
-                        historicalData.add(tickerData);
+                    if (!timestamps.isEmpty() && !close.isEmpty()) {
+                        result.put("symbol", ticker);
+                        result.put("date", Instant.ofEpochSecond(timestamps.get(0).longValue())
+                                .atZone(ZoneId.systemDefault()).toLocalDate().toString());
+                        result.put("close", close.get(0));
                     }
-                    result.put("symbol", ticker);
-                    result.put("data", historicalData);
                 }
             }
         } catch (Exception e) {
@@ -94,4 +83,5 @@ public class StockService {
         }
         return result;
     }
+
 }
