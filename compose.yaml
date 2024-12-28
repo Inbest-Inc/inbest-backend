@@ -3,8 +3,13 @@ services:
     image: 'postgres:17.0'
     container_name: 'inbest-db'
     environment:
-      - 'POSTGRES_DB=inbestDB'
-      - 'POSTGRES_PASSWORD=inbest'
-      - 'POSTGRES_USER=inbest'
+      POSTGRES_DB: 'inbestDB'
+      POSTGRES_PASSWORD: 'inbest'
+      POSTGRES_USER: 'inbest'
     ports:
-      - '5432'
+      - '5432:5432'
+    volumes:
+      - 'postgres-data:/var/lib/postgresql/data'
+
+volumes:
+  postgres-data:
