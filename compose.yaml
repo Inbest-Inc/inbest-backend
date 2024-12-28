@@ -1,6 +1,7 @@
+version: '3.8'
 services:
   postgres:
-    image: 'postgres:17.0'
+    image: 'timescale/timescaledb:latest-pg17'  # TimescaleDB'nin PostgreSQL 17 sürümü
     container_name: 'inbest-db'
     environment:
       POSTGRES_DB: 'inbestDB'
@@ -10,6 +11,7 @@ services:
       - '5432:5432'
     volumes:
       - 'postgres-data:/var/lib/postgresql/data'
+    restart: always  # PostgreSQL'in çökmesi durumunda otomatik başlatır
 
 volumes:
   postgres-data:
