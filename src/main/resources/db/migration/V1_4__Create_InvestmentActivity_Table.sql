@@ -1,0 +1,11 @@
+CREATE TABLE InvestmentActivity (
+    ActivityID SERIAL PRIMARY KEY,
+    PortfolioID INT NOT NULL,
+    StockID INT NOT NULL,
+    ActionType VARCHAR(10) NOT NULL,
+    Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Amount DECIMAL(10, 2) NOT NULL,
+    StockQuantity INT NOT NULL,
+    CONSTRAINT fk_portfolio FOREIGN KEY (PortfolioID) REFERENCES Portfolio (PortfolioID) ON DELETE CASCADE,
+    CONSTRAINT fk_stock FOREIGN KEY (StockID) REFERENCES Stock (StockID) ON DELETE CASCADE
+);

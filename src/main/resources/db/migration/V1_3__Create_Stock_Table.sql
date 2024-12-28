@@ -1,0 +1,8 @@
+CREATE TABLE Stock (
+    StockID SERIAL PRIMARY KEY,
+    TickerSymbol VARCHAR(10) NOT NULL,
+    StockName VARCHAR(100) NOT NULL,
+    CurrentPrice DECIMAL(10, 2) NOT NULL,
+    Price JSONB,
+    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
