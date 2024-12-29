@@ -1,5 +1,5 @@
 CREATE TABLE StockPrice (
-    stock_id INT NOT NULL,
+    stock_id SERIAL NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     date TIMESTAMP NOT NULL,
     CONSTRAINT pk_stockprice PRIMARY KEY (stock_id, date),  -- Composite primary key
