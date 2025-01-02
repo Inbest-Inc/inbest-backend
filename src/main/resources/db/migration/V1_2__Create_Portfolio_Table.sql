@@ -1,9 +1,9 @@
 CREATE TABLE Portfolio (
-    PortfolioID SERIAL PRIMARY KEY,
-    PortfolioName VARCHAR(100) NOT NULL,
-    CreatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    LastUpdatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UserID INT NOT NULL,
-    Visibility VARCHAR(10) DEFAULT 'private',
-    CONSTRAINT fk_user FOREIGN KEY (UserID) REFERENCES Users (id) ON DELETE CASCADE
+    portfolio_id SERIAL PRIMARY KEY,
+    Portfolio_name VARCHAR(100) NOT NULL,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INT NOT NULL,
+    visibility VARCHAR(10) DEFAULT 'private',
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );

@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -9,32 +10,25 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StockService {
 
     private final RestTemplate restTemplate;
+    private final StockRepository stockRepository;
 
     public List<Map<String, Object>> getHistoricalData() {
-        Set<String> sp500Tickers = Set.of(
-                "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "UNH",
-                "V", "JNJ", "JPM", "PFE", "MA", "HD", "DIS", "PYPL", "VZ", "NFLX",
-                "CSCO", "INTC", "MRK", "XOM", "BA", "WMT", "MCD", "KO", "CAT",
-                "IBM", "ABT", "LLY", "MS", "GS", "NKE", "HON", "AMGN", "BMY",
-                "MMM", "TMO", "MDT", "SBUX", "LMT", "DHR", "CVX", "SPG"
-        );
+        Set<String> sp500Tickers = stockRepository.findAllTickerSymbols();
 
-        LocalDate today = LocalDate.now();
-        LocalDate yesterday = LocalDate.now();
+        long interval = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
 
-        long startTime = yesterday.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
-        long endTime = today.atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
         List<Map<String, Object>> stockData = new ArrayList<>();
 
         for (String ticker : sp500Tickers) {
             try {
-                Map<String, Object> response = getTickerData(ticker, startTime, endTime);
+                Map<String, Object> response = getTickerData(ticker, interval);
                 stockData.add(parseTickerData(ticker, response));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -44,9 +38,9 @@ public class StockService {
         return stockData;
     }
 
-    private Map<String, Object> getTickerData(String ticker, long startTime, long endtime) {
+    private Map<String, Object> getTickerData(String ticker, long interval) {
         String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + ticker +
-                "?interval=1d&period1=" + startTime + "&period2=" + endtime;
+                "?interval=1d&period1=" + interval + "&period2=" + interval;
 
         ResponseEntity<Map> responseEntity = restTemplate.getForEntity(url, Map.class);
         return responseEntity.getBody();
@@ -70,10 +64,19 @@ public class StockService {
                     List<Double> close = (List<Double>) quote.get("close");
 
                     if (!timestamps.isEmpty() && !close.isEmpty()) {
+                        double latestPrice = close.get(0);
                         result.put("symbol", ticker);
                         result.put("date", Instant.ofEpochSecond(timestamps.get(0).longValue())
                                 .atZone(ZoneId.systemDefault()).toLocalDate().toString());
-                        result.put("close", close.get(0));
+                        result.put("close", latestPrice);
+
+                        // Stock tablosunda fiyatı güncelle
+                        int updatedRows = stockRepository.updateCurrentPrice(ticker, latestPrice);
+                        if (updatedRows > 0) {
+                            result.put("status", "Updated successfully");
+                        } else {
+                            result.put("status", "Stock not found");
+                        }
                     }
                 }
             }

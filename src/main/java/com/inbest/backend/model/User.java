@@ -21,9 +21,10 @@ public class User implements UserDetails
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id")
+    private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(nullable = false, unique = true)
@@ -32,17 +33,17 @@ public class User implements UserDetails
     @Column(nullable = false, name = "password_hash")
     private String passwordHash;
 
-    @Column(name = "date_joined")
+    @Column(name = "date_joined", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime dateJoined = LocalDateTime.now();
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String surname;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'USER'")
     private Role role;
 
     @Override
