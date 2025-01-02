@@ -33,12 +33,13 @@ Welcome to the backend application of *Inbest*, a web-based social platform for 
    mvn clean install
   ```
 
-7. Configure your database by updating the `application.properties` file in the `src/main/resources` directory. For example:
+7. Configure your database by updating the `.env` file. For example:
   ```bash
-   spring.datasource.url=jdbc:mysql://localhost:3306/inbest_db  
-   spring.datasource.username=your_username  
-   spring.datasource.password=your_password  
-   spring.jpa.hibernate.ddl-auto=update
+   POSTGRES_HOST=127.0.0.1
+  POSTGRES_PORT=5432
+  POSTGRES_DB=inbestDB
+  POSTGRES_USER=inbest
+  POSTGRES_PASSWORD=inbest
   ```
 
 9. Start the application:
