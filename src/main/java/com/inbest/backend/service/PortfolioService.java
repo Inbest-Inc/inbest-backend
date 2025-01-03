@@ -54,6 +54,7 @@ public class PortfolioService
         return insertedPortfolio.getPortfolioId();
     }
 
+<<<<<<< Updated upstream
     public void updatePortfolio(int id, PortfolioDTO portfolioDTO)
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -132,5 +133,11 @@ public class PortfolioService
                 portfolio.getVisibility(),
                 portfolio.getUser().getId()
         )).collect(Collectors.toList());
+=======
+    public boolean checkPortfolioOwnership(int portfolioId, int userId) {
+        return portfolioRepository.findByPortfolioId(portfolioId)
+                .map(portfolio -> portfolio.getUser().getId().equals(userId))
+                .orElse(false);
+>>>>>>> Stashed changes
     }
 }
