@@ -9,8 +9,12 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PortfolioDTO
+public class PortfolioGetResponse
 {
+    private Integer portfolioId;
     private String portfolioName;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastUpdatedDate;
     private String visibility;
+    private Integer userId;
 }

@@ -1,6 +1,7 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.dto.PortfolioDTO;
+import com.inbest.backend.dto.PortfolioGetResponse;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.PortfolioRepository;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PortfolioService
@@ -88,5 +91,46 @@ public class PortfolioService
         Portfolio portfolio = portfolioRepository.findById((long) id)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found!"));
         portfolioRepository.delete(portfolio);
+    }
+
+    public PortfolioGetResponse getPortfolioById(int id)
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Portfolio portfolio = portfolioRepository.findById((long) id)
+                .filter(p -> p.getUser().getId().equals(user.getId())) // Check ownership
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found or access denied"));
+
+        return new PortfolioGetResponse(
+                portfolio.getPortfolioId(),
+                portfolio.getPortfolioName(),
+                portfolio.getCreatedDate(),
+                portfolio.getLastUpdatedDate(),
+                portfolio.getVisibility(),
+                portfolio.getUser().getId()
+        );
+    }
+
+
+    public List<PortfolioGetResponse> getAllPortfolios()
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Portfolio> portfolios = portfolioRepository.findByUser(user);
+        return portfolios.stream().map(portfolio -> new PortfolioGetResponse(
+                portfolio.getPortfolioId(),
+                portfolio.getPortfolioName(),
+                portfolio.getCreatedDate(),
+                portfolio.getLastUpdatedDate(),
+                portfolio.getVisibility(),
+                portfolio.getUser().getId()
+        )).collect(Collectors.toList());
     }
 }
