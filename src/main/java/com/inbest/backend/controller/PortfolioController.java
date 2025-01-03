@@ -1,21 +1,14 @@
 package com.inbest.backend.controller;
 
 import com.inbest.backend.dto.PortfolioDTO;
-import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.response.PortfolioResponse;
 import com.inbest.backend.service.PortfolioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-// PortfolioController içerisinde sadece portfolyoya ait CRUD operasyonları yapılıyor
-//Create portfolio => portfolioName ve visibility ile create ediliyor. Return: portfolioId
-//Update portfolio => param: portfolioId
-//Delete portfolio => param: portfolioId
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/portfolio")
@@ -25,8 +18,7 @@ public class PortfolioController
 
     private final PortfolioService portfolioService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createPortfolio(@RequestBody PortfolioDTO portfolioDTO)
+    private ResponseEntity<String> validatePortfolio(PortfolioDTO portfolioDTO)
     {
         if (portfolioDTO.getPortfolioName() == null || portfolioDTO.getPortfolioName().isEmpty())
         {
@@ -43,6 +35,18 @@ public class PortfolioController
             return new ResponseEntity<>("Portfolio name cannot exceed 100 characters.", HttpStatus.BAD_REQUEST);
         }
 
+        return null;
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createPortfolio(@RequestBody PortfolioDTO portfolioDTO)
+    {
+        ResponseEntity<String> validationResponse = validatePortfolio(portfolioDTO);
+        if (validationResponse != null)
+        {
+            return validationResponse;
+        }
+
         try
         {
             int portfolioId = portfolioService.createPortfolio(portfolioDTO);
@@ -53,6 +57,28 @@ public class PortfolioController
         {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updatePortfolio(@PathVariable int id, @RequestBody PortfolioDTO portfolioDTO)
+    {
+        ResponseEntity<String> validationResponse = validatePortfolio(portfolioDTO);
+        if (validationResponse != null)
+        {
+            return validationResponse;
+        }
+
+        try
+        {
+            portfolioService.updatePortfolio(id, portfolioDTO);
+            return new ResponseEntity<>(new HashMap<String, String>()
+            {{
+                put("status", "success");
+            }}, HttpStatus.OK);
+        }
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 }

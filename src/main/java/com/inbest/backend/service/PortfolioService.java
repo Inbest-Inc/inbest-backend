@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @Service
 public class PortfolioService
@@ -48,6 +49,38 @@ public class PortfolioService
         portfolio.setUser(user);
         Portfolio insertedPortfolio = portfolioRepository.save(portfolio);
         return insertedPortfolio.getPortfolioId();
+    }
+
+    public void updatePortfolio(int id, PortfolioDTO portfolioDTO)
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+
+        Optional<Portfolio> portfolio = portfolioRepository.findById(Long.valueOf(id));
+        if (!portfolio.isPresent())
+        {
+            throw new IllegalArgumentException("Portfolio not found");
+        }
+
+        Portfolio existingPortfolio = portfolio.get();
+
+        if (!existingPortfolio.getUser().getUsername().equals(username))
+        {
+            throw new SecurityException("You can only update your own portfolio");
+        }
+
+        if (!existingPortfolio.getPortfolioName().equals(portfolioDTO.getPortfolioName())
+                && doesPortfolioNameExist(portfolioDTO.getPortfolioName()))
+        {
+            throw new IllegalArgumentException("Portfolio name already exists");
+        }
+        existingPortfolio.setPortfolioName(portfolioDTO.getPortfolioName());
+        existingPortfolio.setVisibility(portfolioDTO.getVisibility());
+        existingPortfolio.setUser(user);
+        existingPortfolio.setLastUpdatedDate(LocalDateTime.now(ZoneId.of("UTC")));
+
+        portfolioRepository.save(existingPortfolio);
     }
 
 }
