@@ -37,7 +37,7 @@ public class PortfolioService
         System.out.println(user);
         if (doesPortfolioNameExist(portfolioDTO.getPortfolioName()))
         {
-            throw new IllegalArgumentException("Portfolio name already exists");
+            throw new IllegalArgumentException("Portfolio name already exists!");
         }
 
         Portfolio portfolio = new Portfolio();
@@ -60,20 +60,20 @@ public class PortfolioService
         Optional<Portfolio> portfolio = portfolioRepository.findById(Long.valueOf(id));
         if (!portfolio.isPresent())
         {
-            throw new IllegalArgumentException("Portfolio not found");
+            throw new IllegalArgumentException("Portfolio not found!");
         }
 
         Portfolio existingPortfolio = portfolio.get();
 
         if (!existingPortfolio.getUser().getUsername().equals(username))
         {
-            throw new SecurityException("You can only update your own portfolio");
+            throw new SecurityException("You can only update your own portfolio!");
         }
 
         if (!existingPortfolio.getPortfolioName().equals(portfolioDTO.getPortfolioName())
                 && doesPortfolioNameExist(portfolioDTO.getPortfolioName()))
         {
-            throw new IllegalArgumentException("Portfolio name already exists");
+            throw new IllegalArgumentException("Portfolio name already exists!");
         }
         existingPortfolio.setPortfolioName(portfolioDTO.getPortfolioName());
         existingPortfolio.setVisibility(portfolioDTO.getVisibility());
@@ -83,4 +83,10 @@ public class PortfolioService
         portfolioRepository.save(existingPortfolio);
     }
 
+    public void deletePortfolio(int id)
+    {
+        Portfolio portfolio = portfolioRepository.findById((long) id)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found!"));
+        portfolioRepository.delete(portfolio);
+    }
 }

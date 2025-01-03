@@ -60,8 +60,12 @@ public class PortfolioController
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updatePortfolio(@PathVariable int id, @RequestBody PortfolioDTO portfolioDTO)
+    public ResponseEntity<?> updatePortfolio(@PathVariable Integer id, @RequestBody PortfolioDTO portfolioDTO)
     {
+        if (id == null || id <= 0) {
+            return new ResponseEntity<>("Invalid ID", HttpStatus.BAD_REQUEST);
+        }
+
         ResponseEntity<String> validationResponse = validatePortfolio(portfolioDTO);
         if (validationResponse != null)
         {
@@ -78,6 +82,25 @@ public class PortfolioController
         }
         catch (Exception e)
         {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deletePortfolio(@PathVariable Integer id)
+    {
+        if (id == null || id <= 0) {
+            return new ResponseEntity<>("Invalid ID", HttpStatus.BAD_REQUEST);
+        }
+
+        try
+        {
+            portfolioService.deletePortfolio(id);
+            return new ResponseEntity<>(new HashMap<String, String>()
+            {{
+                put("status", "deleted");
+            }}, HttpStatus.OK);
+        } catch (Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
