@@ -1,5 +1,6 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.JwtService;
 import com.inbest.backend.service.PortfolioService;
 import com.inbest.backend.service.PortfolioStockMetricService;
@@ -18,17 +19,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PortfolioStockMetricController
 {
-    private final PortfolioStockMetricService portfolioStockMetricService;
+    private final AuthenticationService authenticationService;
     private final PortfolioService portfolioService;
-    private final JwtService jwtService;
+    private final PortfolioStockMetricService portfolioStockMetricService;
 
     @GetMapping("/{portfolioId}")
     public ResponseEntity<?> getStocksAndMetrics(@PathVariable int portfolioId) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String token = (String) authentication.getCredentials();
-
-            int userId = jwtService.extractUserIdFromToken(token);
+            int userId = authenticationService.authenticate_user();
             boolean hasAccess = portfolioService.checkPortfolioOwnership(portfolioId, userId);
 
             if (!hasAccess) {

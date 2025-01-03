@@ -29,12 +29,9 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/").permitAll()
                 .requestMatchers("/api/stock/**", "/").authenticated()
-<<<<<<< Updated upstream
-                .requestMatchers("/api/user/**", "/").authenticated().anyRequest().authenticated());
-=======
                 .requestMatchers("/api/user/**", "/").authenticated()
                 .anyRequest().authenticated());
->>>>>>> Stashed changes
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
