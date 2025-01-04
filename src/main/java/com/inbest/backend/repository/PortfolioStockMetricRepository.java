@@ -1,12 +1,15 @@
 package com.inbest.backend.repository;
 
 import com.inbest.backend.model.position.PortfolioStockMetric;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioStockMetric, Long>
 {
@@ -23,4 +26,6 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
             "WHERE pm.portfolio_id = :portfolioId " +
             "ORDER BY pm.date DESC", nativeQuery = true)
     List<Map<String, Object>> findMetricsByPortfolioId(@Param("portfolioId") int portfolioId);
+
+    Optional<PortfolioStockMetric> findByPortfolioIdAndStockId(Integer portfolioId, Integer stockId);
 }

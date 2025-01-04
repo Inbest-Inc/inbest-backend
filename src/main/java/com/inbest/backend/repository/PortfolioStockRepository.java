@@ -5,6 +5,10 @@ import com.inbest.backend.model.PortfolioStockModel;
 import com.inbest.backend.model.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PortfolioStockRepository extends JpaRepository<PortfolioStockModel, Long> {
+import java.util.Optional;
+
+public interface PortfolioStockRepository extends JpaRepository<PortfolioStockModel, Long>
+{
     boolean existsByPortfolioAndStock(Portfolio portfolio, Stock stock);
+
 }
