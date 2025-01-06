@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PortfolioStockService
@@ -80,7 +82,7 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public PortfolioStockResponse updateQuantity(Integer portfolioId, Integer stockId, Integer quantity) throws Exception
+    public void updateQuantity(Integer portfolioId, Integer stockId, Integer quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -141,14 +143,40 @@ public class PortfolioStockService
         portfolioStockMetric.setLastTransactionDate(Timestamp.from(Instant.now()).toLocalDateTime());
         portfolioStockMetric.setLastUpdated(Timestamp.from(Instant.now()).toLocalDateTime());
         portfolioStockMetricRepository.save(portfolioStockMetric);
+    }
 
-        //return düzeltilecek!
-        return new PortfolioStockResponse(
-                portfolioStockModel.getPortfolioStockId(),
-                stock.getStockName(),
-                stock.getTickerSymbol(),
-                portfolioStockModel.getQuantity(),
-                stock.getCurrentPrice()
-        );
+    @Transactional
+    public void removeStockFromPortfolio(Integer portfolioId, Integer stockId) throws Exception
+    {
+        Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
+
+        Stock stock = stockRepository.findById(Long.valueOf(stockId)).orElseThrow(() -> new Exception("Stock not found"));
+
+        boolean stockExistInPortfolioStock = portfolioStockRepository.existsByPortfolioAndStock(portfolio, stock);
+        if (!stockExistInPortfolioStock)
+        {
+            throw new Exception("You do not have portfolio or stock");
+        }
+
+        portfolioStockRepository.deleteById(Long.valueOf(portfolioId));
+        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stockId);
+
+        List<PortfolioStockMetric> remainingMetrics = portfolioStockMetricRepository.findByPortfolioId(portfolioId);
+        BigDecimal totalQuantity = remainingMetrics.stream()
+                .map(metric -> BigDecimal.valueOf(metric.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        for (PortfolioStockMetric metric : remainingMetrics)
+        {
+            BigDecimal positionWeight = BigDecimal.ZERO;
+            if (totalQuantity.compareTo(BigDecimal.ZERO) > 0)
+            {
+                positionWeight = BigDecimal.valueOf(metric.getQuantity())
+                        .divide(totalQuantity, 2, BigDecimal.ROUND_HALF_UP);
+            }
+
+            metric.setPositionWeight(positionWeight);
+            portfolioStockMetricRepository.save(metric);
+        }
     }
 }

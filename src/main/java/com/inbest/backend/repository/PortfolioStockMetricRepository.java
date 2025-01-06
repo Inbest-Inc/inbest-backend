@@ -34,4 +34,8 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
             "FROM positionmetrics " +
             "WHERE portfolio_id = :portfolioId", nativeQuery = true)
     BigDecimal findTotalPortfolioValue(@Param("portfolioId") int portfolioId);
+
+    void deleteByPortfolioIdAndStockId(Integer portfolioId, Integer stockId);
+
+    List<PortfolioStockMetric> findByPortfolioId(Integer portfolioId);
 }

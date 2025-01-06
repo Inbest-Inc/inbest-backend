@@ -72,6 +72,26 @@ public class PortfolioStockController
         {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
 
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteStockFromPortfolio(@RequestParam Integer portfolioId, @RequestParam Integer stockId)
+    {
+        try
+        {
+            int userId = authenticationService.authenticate_user();
+            boolean hasAccess = portfolioService.checkPortfolioOwnership(portfolioId, userId);
+            if (!hasAccess)
+            {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
+            }
+            portfolioStockService.removeStockFromPortfolio(portfolioId, stockId);
+            return ResponseEntity.ok(Map.of("status", "success"));
+        }
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 }
