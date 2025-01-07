@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,4 +21,7 @@ public interface StockRepository extends JpaRepository<Stock, Long>
     Set<String> findAllTickerSymbols();
 
     Optional<Stock> findByTickerSymbol(String tickerSymbol);
+
+    @Query("SELECT s FROM Stock s")
+    List<Stock> findAllStocks();
 }

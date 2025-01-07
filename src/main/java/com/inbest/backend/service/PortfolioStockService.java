@@ -67,7 +67,7 @@ public class PortfolioStockService
                 .stockId(stock.getStockId())
                 .date(LocalDate.now().atStartOfDay())
                 .quantity(quantity)
-                .averageCost(BigDecimal.valueOf(0))
+                .averageCost(BigDecimal.valueOf(stock.getCurrentPrice()))
                 .currentValue(BigDecimal.valueOf(stock.getCurrentPrice()))
                 .totalReturn(BigDecimal.valueOf(0))
                 .positionWeight(BigDecimal.valueOf(0))
@@ -107,21 +107,17 @@ public class PortfolioStockService
         BigDecimal currentPrice = BigDecimal.valueOf(stock.getCurrentPrice());
 
         BigDecimal avgCost = portfolioStockMetric.getAverageCost();
-        BigDecimal totalReturn = portfolioStockMetric.getTotalReturn();
-        BigDecimal positionWeight = portfolioStockMetric.getPositionWeight();
-        BigDecimal totalQuantity = portfolioStockMetricRepository.findTotalPortfolioValue(portfolioId);
+        BigDecimal totalReturn;
 
         if (transactionType.equals("BUY"))
         {
-            totalQuantity = totalQuantity.add(BigDecimal.valueOf(quantity - oldQuantity));
             avgCost = ((avgCost.multiply(BigDecimal.valueOf(oldQuantity)))
                     .add(currentPrice.multiply(BigDecimal.valueOf(quantity - oldQuantity))))
                     .divide(BigDecimal.valueOf(quantity), 2, BigDecimal.ROUND_HALF_UP);
-            //avgCost = ((avgCost * oldQuantity) + (currentPrice * quantityDiff)) / totalQuantity
+            //avgCost = ((avgCost* * oldQuantity) + (currentPrice * quantityDiff)) / totalQuantity
         }
         else
         {
-            totalQuantity = totalQuantity.subtract(BigDecimal.valueOf(oldQuantity - quantity));
             avgCost = ((avgCost.multiply(BigDecimal.valueOf(oldQuantity)))
                     .subtract(currentPrice.multiply(BigDecimal.valueOf(oldQuantity - quantity))))
                     .divide(BigDecimal.valueOf(quantity), 2, BigDecimal.ROUND_HALF_UP);
@@ -129,7 +125,6 @@ public class PortfolioStockService
 
         totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
 
-        positionWeight = BigDecimal.valueOf(quantity).divide(totalQuantity, 2, BigDecimal.ROUND_HALF_UP);
         portfolioStockModel.setQuantity((double) quantity);
         portfolioStockRepository.save(portfolioStockModel);
 
@@ -137,7 +132,6 @@ public class PortfolioStockService
         portfolioStockMetric.setAverageCost(avgCost);
         portfolioStockMetric.setCurrentValue(BigDecimal.valueOf(stock.getCurrentPrice()));
         portfolioStockMetric.setTotalReturn(totalReturn);
-        portfolioStockMetric.setPositionWeight(positionWeight);
         portfolioStockMetric.setLastTransactionType(transactionType);
         portfolioStockMetric.setLastTransactionDate(Timestamp.from(Instant.now()).toLocalDateTime());
         portfolioStockMetric.setLastUpdated(Timestamp.from(Instant.now()).toLocalDateTime());
@@ -191,13 +185,15 @@ public class PortfolioStockService
             throw new Exception("No records found for the portfolio");
         }
 
+        latestDate = latestDate.toLocalDate().atStartOfDay();  // Ensure the date is set to start of day with 00:00:00.000000
+
         List<PortfolioStockMetric> metrics = portfolioStockMetricRepository.findByPortfolioIdAndDate(portfolioId, latestDate);
 
-        BigDecimal totalQuantity = metrics.stream()
-                .map(metric -> BigDecimal.valueOf(metric.getQuantity()))
+        BigDecimal totalWeightedValue = metrics.stream()
+                .map(metric -> metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalQuantity.compareTo(BigDecimal.ZERO) == 0) {
+        if (totalWeightedValue.compareTo(BigDecimal.ZERO) == 0) {
             for (PortfolioStockMetric metric : metrics) {
                 metric.setPositionWeight(BigDecimal.ZERO);
                 portfolioStockMetricRepository.save(metric);
@@ -206,8 +202,8 @@ public class PortfolioStockService
         }
 
         for (PortfolioStockMetric metric : metrics) {
-            BigDecimal positionWeight = BigDecimal.valueOf(metric.getQuantity())
-                    .divide(totalQuantity, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal weightedValue = metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity()));
+            BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, 2, BigDecimal.ROUND_HALF_UP);
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }

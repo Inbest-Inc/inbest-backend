@@ -19,6 +19,16 @@ public class StockService {
     private final RestTemplate restTemplate;
     private final StockRepository stockRepository;
 
+    public List<Map<String, String>> getAllStockNamesAndSymbols() {
+        return stockRepository.findAllStocks()
+                .stream()
+                .map(stock -> Map.of(
+                        "ticker_symbol", stock.getTickerSymbol(),
+                        "stock_name", stock.getStockName()
+                ))
+                .collect(Collectors.toList());
+    }
+
     public List<Map<String, Object>> getHistoricalData() {
         Set<String> sp500Tickers = stockRepository.findAllTickerSymbols();
 

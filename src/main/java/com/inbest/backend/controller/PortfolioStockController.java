@@ -37,7 +37,7 @@ public class PortfolioStockController
                         .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
             }
             portfolioStockService.addStockToPortfolio(portfolioId, tickerName, quantity);
-            return new ResponseEntity<>(HttpStatus.CREATED);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
         catch (Exception e)
         {

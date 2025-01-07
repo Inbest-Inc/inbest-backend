@@ -21,4 +21,10 @@ public class StockController {
         List<Map<String, Object>> data = stockService.getHistoricalData();
         return ResponseEntity.ok(Map.of("result", data));
     }
+
+    @GetMapping("/tickers")
+    public ResponseEntity<List<Map<String, String>>> getAllStockNamesAndSymbols() {
+        List<Map<String, String>> stocks = stockService.getAllStockNamesAndSymbols();
+        return ResponseEntity.ok(stocks);
+    }
 }
