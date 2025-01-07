@@ -94,7 +94,7 @@ public class PortfolioStockService
         }
 
         PortfolioStockModel portfolioStockModel = portfolioStockRepository
-                .findById(Long.valueOf(portfolioId))
+                .findByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId())
                 .orElseThrow(() -> new Exception("Portfolio stock not found"));
 
         String transactionType = quantity < portfolioStockModel.getQuantity() ? "SELL" : "BUY";
