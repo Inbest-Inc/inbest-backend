@@ -140,4 +140,32 @@ public class PortfolioService
                 .orElse(false);
 
     }
+
+    public List<PortfolioGetResponse> getPortfoliosByUsername(String username)
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authName = auth.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Portfolio> portfolios;
+
+        if (authName.equals(username)) {
+            // Return both public and private portfolios if user is looking for their own portfolios
+            portfolios = portfolioRepository.findByUser(user);
+        } else {
+            // Return only public portfolios if another user is making the request
+            portfolios = portfolioRepository.findByUserAndVisibility(user, "public");
+        }
+
+        return portfolios.stream().map(portfolio -> new PortfolioGetResponse(
+                portfolio.getPortfolioId(),
+                portfolio.getPortfolioName(),
+                portfolio.getCreatedDate(),
+                portfolio.getLastUpdatedDate(),
+                portfolio.getVisibility(),
+                portfolio.getUser().getId()
+        )).collect(Collectors.toList());
+    }
 }

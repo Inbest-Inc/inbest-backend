@@ -139,4 +139,17 @@ public class PortfolioController
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/list-by-username/{username}")
+    public ResponseEntity<?> getPortfoliosByUsername(@PathVariable String username) {
+        try
+        {
+            List<PortfolioGetResponse> portfolios = portfolioService.getPortfoliosByUsername(username);
+            return ResponseEntity.ok(new GenericResponse("success", "Portfolios retrieved successfully", portfolios));
+        }
+        catch (Exception e)
+        {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
 }
