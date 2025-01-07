@@ -1,4 +1,4 @@
-package com.inbest.backend.dto;
+package com.inbest.backend.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
