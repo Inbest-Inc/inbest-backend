@@ -12,7 +12,6 @@ import lombok.*;
 @Table(name = "portfoliostock")
 public class PortfolioStockModel
 {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "portfolio_stock_id")
@@ -28,7 +27,4 @@ public class PortfolioStockModel
 
     @Column(name = "quantity", nullable = false)
     private Double quantity;
-
-    @Column(name = "visibility", nullable = false)
-    private String visibility;
 }

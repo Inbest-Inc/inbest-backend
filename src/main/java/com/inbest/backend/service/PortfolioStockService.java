@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,7 +53,6 @@ public class PortfolioStockService
                 .portfolio(portfolio)
                 .stock(stock)
                 .quantity((double) 0)
-                .visibility(portfolio.getVisibility())
                 .build();
 
         portfolioStockRepository.save(portfolioStockModel);
@@ -143,6 +143,8 @@ public class PortfolioStockService
         portfolioStockMetric.setLastTransactionDate(Timestamp.from(Instant.now()).toLocalDateTime());
         portfolioStockMetric.setLastUpdated(Timestamp.from(Instant.now()).toLocalDateTime());
         portfolioStockMetricRepository.save(portfolioStockMetric);
+
+        recalculatePositionWeights(portfolioId);
     }
 
     @Transactional
@@ -178,5 +180,38 @@ public class PortfolioStockService
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
+
+        recalculatePositionWeights(portfolioId);
     }
+
+    @Transactional
+    public void recalculatePositionWeights(Integer portfolioId) throws Exception {
+        LocalDate latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
+
+        if (latestDate == null) {
+            throw new Exception("No records found for the portfolio");
+        }
+
+        List<PortfolioStockMetric> metrics = portfolioStockMetricRepository.findByPortfolioIdAndDate(portfolioId, latestDate);
+
+        BigDecimal totalQuantity = metrics.stream()
+                .map(metric -> BigDecimal.valueOf(metric.getQuantity()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            for (PortfolioStockMetric metric : metrics) {
+                metric.setPositionWeight(BigDecimal.ZERO);
+                portfolioStockMetricRepository.save(metric);
+            }
+            return;
+        }
+
+        for (PortfolioStockMetric metric : metrics) {
+            BigDecimal positionWeight = BigDecimal.valueOf(metric.getQuantity())
+                    .divide(totalQuantity, 2, BigDecimal.ROUND_HALF_UP);
+            metric.setPositionWeight(positionWeight);
+            portfolioStockMetricRepository.save(metric);
+        }
+    }
+
 }
