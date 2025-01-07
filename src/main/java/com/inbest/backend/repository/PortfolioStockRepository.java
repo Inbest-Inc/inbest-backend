@@ -12,4 +12,5 @@ public interface PortfolioStockRepository extends JpaRepository<PortfolioStockMo
     boolean existsByPortfolioAndStock(Portfolio portfolio, Stock stock);
 
     Optional<PortfolioStockModel> findByPortfolio_PortfolioIdAndStock_StockId(Integer portfolioId, Integer stockId);
+    void deleteByPortfolio_PortfolioIdAndStock_StockId(Integer portfolioId, Integer stockId);
 }

@@ -46,4 +46,6 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
     @Query("SELECT psm FROM PortfolioStockMetric psm WHERE psm.portfolioId = :portfolioId AND psm.date = :date")
     List<PortfolioStockMetric> findByPortfolioIdAndDate(@Param("portfolioId") Integer portfolioId, @Param("date") LocalDateTime date);
 
+    void deleteByPortfolioIdAndStockIdAndDate(Integer portfolioId, Integer stockId, LocalDateTime date);
+
 }

@@ -153,26 +153,8 @@ public class PortfolioStockService
             throw new Exception("You do not have portfolio or stock");
         }
 
-        portfolioStockRepository.deleteById(Long.valueOf(portfolioId));
-        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stock.getStockId());
-
-        List<PortfolioStockMetric> remainingMetrics = portfolioStockMetricRepository.findByPortfolioId(portfolioId);
-        BigDecimal totalQuantity = remainingMetrics.stream()
-                .map(metric -> BigDecimal.valueOf(metric.getQuantity()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        for (PortfolioStockMetric metric : remainingMetrics)
-        {
-            BigDecimal positionWeight = BigDecimal.ZERO;
-            if (totalQuantity.compareTo(BigDecimal.ZERO) > 0)
-            {
-                positionWeight = BigDecimal.valueOf(metric.getQuantity())
-                        .divide(totalQuantity, 2, BigDecimal.ROUND_HALF_UP);
-            }
-
-            metric.setPositionWeight(positionWeight);
-            portfolioStockMetricRepository.save(metric);
-        }
+        portfolioStockRepository.deleteByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId());
+        portfolioStockMetricRepository.deleteByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(), LocalDate.now().atStartOfDay());
 
         recalculatePositionWeights(portfolioId);
     }
