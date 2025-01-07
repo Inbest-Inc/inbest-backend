@@ -25,7 +25,7 @@ public class PortfolioStockController
     private final AuthenticationService authenticationService;
 
     @PostMapping("/add")
-    public ResponseEntity<?> addStockToPortfolio(@RequestParam Integer portfolioId, @RequestParam Integer stockId)
+    public ResponseEntity<?> addStockToPortfolio(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Integer quantity)
     {
         try
         {
@@ -36,8 +36,8 @@ public class PortfolioStockController
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
             }
-            PortfolioStockResponse portfolioStockResponse = portfolioStockService.addStockToPortfolio(portfolioId, stockId);
-            return new ResponseEntity<>(portfolioStockResponse, HttpStatus.CREATED);
+            portfolioStockService.addStockToPortfolio(portfolioId, tickerName, quantity);
+            return new ResponseEntity<>(HttpStatus.CREATED);
         }
         catch (Exception e)
         {

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,8 +41,9 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
     List<PortfolioStockMetric> findByPortfolioId(Integer portfolioId);
 
     @Query("SELECT MAX(psm.date) FROM PortfolioStockMetric psm WHERE psm.portfolioId = :portfolioId")
-    LocalDate findLatestDateByPortfolioId(@Param("portfolioId") Integer portfolioId);
+    LocalDateTime findLatestDateByPortfolioId(@Param("portfolioId") Integer portfolioId);
 
     @Query("SELECT psm FROM PortfolioStockMetric psm WHERE psm.portfolioId = :portfolioId AND psm.date = :date")
-    List<PortfolioStockMetric> findByPortfolioIdAndDate(@Param("portfolioId") Integer portfolioId, @Param("date") LocalDate date);
+    List<PortfolioStockMetric> findByPortfolioIdAndDate(@Param("portfolioId") Integer portfolioId, @Param("date") LocalDateTime date);
+
 }

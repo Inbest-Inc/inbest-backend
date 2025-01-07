@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,11 +38,11 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public PortfolioStockResponse addStockToPortfolio(Integer portfolioId, Integer stockId) throws Exception
+    public void addStockToPortfolio(Integer portfolioId, String tickerName, Integer quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
-        Stock stock = stockRepository.findById(Long.valueOf(stockId)).orElseThrow(() -> new Exception("Stock not found"));
+        Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
 
         boolean stockExistsInPortfolio = portfolioStockRepository.existsByPortfolioAndStock(portfolio, stock);
         if (stockExistsInPortfolio)
@@ -49,19 +50,23 @@ public class PortfolioStockService
             throw new Exception("Stock is already added to the portfolio");
         }
 
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+
         PortfolioStockModel portfolioStockModel = PortfolioStockModel.builder()
                 .portfolio(portfolio)
                 .stock(stock)
-                .quantity((double) 0)
+                .quantity(quantity.doubleValue())
                 .build();
 
         portfolioStockRepository.save(portfolioStockModel);
 
         PortfolioStockMetric portfolioStockMetric = PortfolioStockMetric.builder()
                 .portfolioId(portfolioId)
-                .stockId(stockId)
-                .date(Timestamp.from(Instant.now()).toLocalDateTime())
-                .quantity(0)
+                .stockId(stock.getStockId())
+                .date(LocalDate.now().atStartOfDay())
+                .quantity(quantity)
                 .averageCost(BigDecimal.valueOf(0))
                 .currentValue(BigDecimal.valueOf(stock.getCurrentPrice()))
                 .totalReturn(BigDecimal.valueOf(0))
@@ -72,13 +77,7 @@ public class PortfolioStockService
 
         portfolioStockMetricRepository.save(portfolioStockMetric);
 
-        return new PortfolioStockResponse(
-                portfolioStockModel.getPortfolioStockId(),
-                stock.getStockName(),
-                stock.getTickerSymbol(),
-                portfolioStockModel.getQuantity(),
-                stock.getCurrentPrice()
-        );
+        recalculatePositionWeights(portfolioId);
     }
 
     @Transactional
@@ -186,7 +185,7 @@ public class PortfolioStockService
 
     @Transactional
     public void recalculatePositionWeights(Integer portfolioId) throws Exception {
-        LocalDate latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
+        LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
 
         if (latestDate == null) {
             throw new Exception("No records found for the portfolio");

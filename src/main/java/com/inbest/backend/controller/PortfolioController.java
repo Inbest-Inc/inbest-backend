@@ -68,7 +68,7 @@ public class PortfolioController
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PostMapping("/update/{id}")
     public ResponseEntity<?> updatePortfolio(@PathVariable Integer id, @RequestBody PortfolioDTO portfolioDTO)
     {
         if (id == null || id <= 0)

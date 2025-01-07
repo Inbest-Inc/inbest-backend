@@ -18,4 +18,6 @@ public interface StockRepository extends JpaRepository<Stock, Long>
     int updateCurrentPrice(@Param("ticker") String ticker, @Param("price") double price);
     @Query("SELECT s.tickerSymbol FROM Stock s")
     Set<String> findAllTickerSymbols();
+
+    Optional<Stock> findByTickerSymbol(String tickerSymbol);
 }

@@ -30,6 +30,9 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui*", "/").permitAll()
                 .requestMatchers("/swagger-ui/**", "/").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/").permitAll()
+                //Public portfolio's
+                .requestMatchers("/api/portfolio/list-by-username/**", "/").permitAll()
+                //For frontend requests
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated());
 
