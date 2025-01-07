@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/portfolio/stock/metric")
+@RequestMapping("/api/portfolio/stock/metric")
 @RequiredArgsConstructor
 public class PortfolioStockMetricController
 {
