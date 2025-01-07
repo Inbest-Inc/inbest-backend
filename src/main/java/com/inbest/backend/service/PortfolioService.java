@@ -1,7 +1,7 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.dto.PortfolioDTO;
-import com.inbest.backend.dto.PortfolioGetResponse;
+import com.inbest.backend.model.response.PortfolioGetResponse;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.PortfolioRepository;
