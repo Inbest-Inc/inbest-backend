@@ -22,7 +22,7 @@ public class StockService {
     public List<Map<String, Object>> getHistoricalData() {
         Set<String> sp500Tickers = stockRepository.findAllTickerSymbols();
 
-        long interval = LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
+        long interval = LocalDate.now().minusDays(3).atStartOfDay(ZoneId.systemDefault()).toEpochSecond();
 
         List<Map<String, Object>> stockData = new ArrayList<>();
 

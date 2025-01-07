@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.model.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -33,6 +34,7 @@ public class JwtService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Role not found"))
                 .getAuthority());
+        claims.put("user_id", ((User) userDetails).getId());
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -67,5 +69,17 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(java.util.Base64.getEncoder().encodeToString(SECRET_KEY.getBytes()));
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public int extractUserIdFromToken(String token) {
+        token = token.replace("Bearer ", "");
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("user_id", Integer.class);
     }
 }
