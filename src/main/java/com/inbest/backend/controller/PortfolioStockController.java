@@ -46,7 +46,7 @@ public class PortfolioStockController
     }
 
     @PutMapping("/update/quantity")
-    public ResponseEntity<?> updateStockQuantity(@RequestParam Integer portfolioId, @RequestParam Integer stockId, @RequestParam Integer quantity)
+    public ResponseEntity<?> updateStockQuantity(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Integer quantity)
     {
         try
         {
@@ -62,7 +62,7 @@ public class PortfolioStockController
             {
                 throw new IllegalArgumentException("Quantity must be greater than zero");
             }
-            portfolioStockService.updateQuantity(portfolioId, stockId, quantity);
+            portfolioStockService.updateQuantity(portfolioId, tickerName, quantity);
             return new ResponseEntity<>(new HashMap<String, String>()
             {{
                 put("status", "success");
@@ -75,7 +75,7 @@ public class PortfolioStockController
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteStockFromPortfolio(@RequestParam Integer portfolioId, @RequestParam Integer stockId)
+    public ResponseEntity<?> deleteStockFromPortfolio(@RequestParam Integer portfolioId, @RequestParam String tickerName)
     {
         try
         {
@@ -86,7 +86,7 @@ public class PortfolioStockController
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
             }
-            portfolioStockService.removeStockFromPortfolio(portfolioId, stockId);
+            portfolioStockService.removeStockFromPortfolio(portfolioId, tickerName);
             return ResponseEntity.ok(Map.of("status", "success"));
         }
         catch (Exception e)

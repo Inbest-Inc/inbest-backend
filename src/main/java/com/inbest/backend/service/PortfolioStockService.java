@@ -81,11 +81,11 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public void updateQuantity(Integer portfolioId, Integer stockId, Integer quantity) throws Exception
+    public void updateQuantity(Integer portfolioId, String tickerName, Integer quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
-        Stock stock = stockRepository.findById(Long.valueOf(stockId)).orElseThrow(() -> new Exception("Stock not found"));
+        Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
 
         boolean stockExistInPortfolioStock = portfolioStockRepository.existsByPortfolioAndStock(portfolio, stock);
         if (!stockExistInPortfolioStock)
@@ -100,7 +100,7 @@ public class PortfolioStockService
         String transactionType = quantity < portfolioStockModel.getQuantity() ? "SELL" : "BUY";
 
         PortfolioStockMetric portfolioStockMetric = portfolioStockMetricRepository
-                .findByPortfolioIdAndStockId(portfolioId, stockId)
+                .findByPortfolioIdAndStockId(portfolioId, stock.getStockId())
                 .orElseThrow(() -> new Exception("Metrics not found"));
 
         int oldQuantity = portfolioStockMetric.getQuantity();
@@ -141,11 +141,11 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public void removeStockFromPortfolio(Integer portfolioId, Integer stockId) throws Exception
+    public void removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
-        Stock stock = stockRepository.findById(Long.valueOf(stockId)).orElseThrow(() -> new Exception("Stock not found"));
+        Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
 
         boolean stockExistInPortfolioStock = portfolioStockRepository.existsByPortfolioAndStock(portfolio, stock);
         if (!stockExistInPortfolioStock)
@@ -154,7 +154,7 @@ public class PortfolioStockService
         }
 
         portfolioStockRepository.deleteById(Long.valueOf(portfolioId));
-        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stockId);
+        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stock.getStockId());
 
         List<PortfolioStockMetric> remainingMetrics = portfolioStockMetricRepository.findByPortfolioId(portfolioId);
         BigDecimal totalQuantity = remainingMetrics.stream()
