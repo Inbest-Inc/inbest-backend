@@ -26,14 +26,6 @@ public class PortfolioStockMetricController
     @GetMapping("/{portfolioId}")
     public ResponseEntity<?> getStocksAndMetrics(@PathVariable int portfolioId) {
         try {
-            int userId = authenticationService.authenticate_user();
-            boolean hasAccess = portfolioService.checkPortfolioOwnership(portfolioId, userId);
-
-            if (!hasAccess) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
-            }
-
             List<Map<String, Object>> data = portfolioStockMetricService.getStocksAndMetrics(portfolioId);
 
             if (data.isEmpty()) {

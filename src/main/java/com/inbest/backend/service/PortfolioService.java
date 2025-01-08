@@ -138,7 +138,6 @@ public class PortfolioService
         return portfolioRepository.findByPortfolioId(portfolioId)
                 .map(portfolio -> portfolio.getUser().getId().equals(userId))
                 .orElse(false);
-
     }
 
     public List<PortfolioGetResponse> getPortfoliosByUsername(String username)

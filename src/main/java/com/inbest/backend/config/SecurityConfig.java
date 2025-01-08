@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**", "/").permitAll()
                 //Public portfolio's
                 .requestMatchers("/api/portfolio/list-by-username/**", "/").permitAll()
+                .requestMatchers("/api/portfolio/stock/metric/**", "/").permitAll()
                 //For frontend requests
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated());
