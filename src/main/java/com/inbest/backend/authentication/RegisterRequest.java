@@ -11,7 +11,7 @@ import lombok.Setter;
 public class RegisterRequest {
 
     @NotBlank(message = "Username cannot be blank")
-    @Size(min = 3, max = 50)
+    @Size(min = 4, max = 100)
     private String username;
 
     @NotBlank(message = "Email cannot be blank")
