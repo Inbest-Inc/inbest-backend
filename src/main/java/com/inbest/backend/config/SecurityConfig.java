@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/").permitAll()
                 //Public portfolio's
+                .requestMatchers("/api/user/**", "/").permitAll()
                 .requestMatchers("/api/portfolio/list-by-username/**", "/").permitAll()
                 .requestMatchers("/api/portfolio/stock/metric/**", "/").permitAll()
                 //For frontend requests
