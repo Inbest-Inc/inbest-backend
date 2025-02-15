@@ -14,20 +14,17 @@ public class ForgotPasswordService
     private UserRepository userRepository;
 
     @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
     private EmailService emailService;
 
-    private static final int EXPIRATION_TIME = 30; // 30 min
     @Autowired
     private TokenService tokenService;
+
+    private static final int EXPIRATION_TIME = 30; // 30 min
 
     public void sendForgotPasswordEmail(String email)
     {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         String resetToken = tokenService.createToken(user, TokenType.PASSWORD_RESET, EXPIRATION_TIME);
         String resetLink = "http://inbest.vercel.app/api/resetPassword?token=" + resetToken;
 
