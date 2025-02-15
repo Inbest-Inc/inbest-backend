@@ -1,5 +1,6 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.model.Stock;
 import com.inbest.backend.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/stock")
@@ -18,13 +20,19 @@ public class StockController {
 
     @GetMapping("/data")
     public ResponseEntity<?> getHistoricalData() {
-        List<Map<String, Object>> data = stockService.getHistoricalData();
-        return ResponseEntity.ok(Map.of("result", data));
+        List<Stock> stocks = stockService.findAllStocks();
+        return ResponseEntity.ok(Map.of("result", stocks));
     }
 
     @GetMapping("/tickers")
     public ResponseEntity<List<Map<String, String>>> getAllStockNamesAndSymbols() {
-        List<Map<String, String>> stocks = stockService.getAllStockNamesAndSymbols();
-        return ResponseEntity.ok(stocks);
+        List<Stock> stocks = stockService.findAllStocks();
+        List<Map<String, String>> result = stocks.stream()
+                .map(stock -> Map.of(
+                        "symbol", stock.getTickerSymbol(),
+                        "name", stock.getStockName()
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
     }
 }

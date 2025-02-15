@@ -26,6 +26,10 @@ public class Stock {
     @Column(name = "current_price", nullable = false)
     private Double currentPrice;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
+
     @Column(name = "created_date")
     private LocalDateTime createdDate = LocalDateTime.now();
 }
