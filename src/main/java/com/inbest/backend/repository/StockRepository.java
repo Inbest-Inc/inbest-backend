@@ -20,16 +20,8 @@ public interface StockRepository extends JpaRepository<Stock, Long>
     @Query("SELECT s.tickerSymbol FROM Stock s")
     Set<String> findAllTickerSymbols();
 
-    @Query("SELECT s.tickerSymbol FROM Stock s WHERE s.active = true")
-    Set<String> findAllActiveTickers();
-
     Optional<Stock> findByTickerSymbol(String tickerSymbol);
 
     @Query("SELECT s FROM Stock s")
     List<Stock> findAllStocks();
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE Stock s SET s.active = false WHERE s.tickerSymbol = :ticker")
-    void deactivateStock(@Param("ticker") String ticker);
 }

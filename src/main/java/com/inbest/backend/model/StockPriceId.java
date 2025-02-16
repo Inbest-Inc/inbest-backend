@@ -13,5 +13,4 @@ public class StockPriceId implements Serializable {
     private Stock stock;
     private LocalDateTime date;
 
-    // equals ve hashCode metodları Lombok tarafından sağlanıyor
 }

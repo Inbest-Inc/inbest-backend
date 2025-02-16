@@ -10,12 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Value;
-import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,170 +27,152 @@ public class StockService {
     private final RestTemplate restTemplate;
     private final StockRepository stockRepository;
     private final StockPriceRepository stockPriceRepository;
+    //bu iki fonksiyon data ve tickers endpointlerindeki ciktilari bozmamak icindi burada hata olabilir
+    public List<Map<String, String>> getAllStockNamesAndSymbols() {
+        return stockRepository.findAllStocks()
+                .stream()
+                .map(stock -> Map.of(
+                        "ticker_symbol", stock.getTickerSymbol(),
+                        "stock_name", stock.getStockName()
+                ))
+                .collect(Collectors.toList());
+    }
 
-    @Value("${stock.deactivate-removed:true}")  // application.properties'den al, varsayılan true
-    private boolean deactivateRemovedStocks;
+    public Map<String, Object> getHistoricalData() {
+        LocalDateTime threeDaysAgo = LocalDate.now().minusDays(3).atStartOfDay();
+        Set<String> sp500Tickers = stockRepository.findAllTickerSymbols();
+        List<Map<String, Object>> stockData = new ArrayList<>();
+
+        for (String ticker : sp500Tickers) {
+            try {
+                Map<String, Object> yahooData = getYahooFinanceData(ticker, threeDaysAgo.toLocalDate(), threeDaysAgo.toLocalDate());
+                if (yahooData == null) {
+                    throw new RuntimeException("Yahoo Finance'den veri alinamadi");
+                }
+                double closePrice = extractPrice(yahooData);
+
+                stockData.add(Map.of(
+                        "date", threeDaysAgo.toLocalDate().toString(),
+                        "symbol", ticker,
+                        "close", closePrice,
+                        "status", "Updated successfully"
+                ));
+
+                Thread.sleep(200); // Rate limiting
+
+            } catch (Exception e) {
+                stockData.add(Map.of(
+                        "symbol", ticker,
+                        "error", e.getMessage()
+                ));
+            }
+        }
+        return Map.of("result", stockData);
+    }
 
     @Value("${stock.sp500.tickers}")
     private String sp500TickersString;
 
     @Transactional
-    @Scheduled(cron = "0 */5 * * * *")  // Test için: Her 5 dakikada bir
-    public void updateDailyStockData() {
-        LocalDate today = LocalDate.now();
-        log.info("=== {} Tarihli Hisse Senedi Guncelleme Islemi Baslatildi ===", today);
+    @Scheduled(cron = "0 */5 * * * *") // Her gun saat 1 de calisacak
+    public void updateStockPrices() {
+        LocalDateTime yesterday = LocalDate.now().minusDays(1).atStartOfDay();
+        log.info("=== {} tarihli fiyat guncelleme islemi baslatildi ===", yesterday.toLocalDate());
 
-        // S&P 500 hisselerini Yahoo Finance'den al
+        // S&P 500 listesini al
         Set<String> sp500Tickers = getSP500Components();
-        log.info("S&P 500'den {} hisse alindi", sp500Tickers.size());
-
-        // Mevcut DB'deki aktif hisseleri al
-        Set<String> existingTickers = stockRepository.findAllActiveTickers();
-        log.info("Veritabaninda {} aktif hisse mevcut", existingTickers.size());
-
-        // S&P 500'den çıkarılan hisseleri bul
-        Set<String> removedTickers = new HashSet<>(existingTickers);
-        removedTickers.removeAll(sp500Tickers);
+        log.info("Kayitli S&P 500 listesinden {} hisse alindi", sp500Tickers.size());
 
         int successCount = 0;
         int errorCount = 0;
         List<String> failedStocks = new ArrayList<>();
         List<String> newStocks = new ArrayList<>();
-        List<String> deactivatedStocks = new ArrayList<>();
+        List<String> updatedStocks = new ArrayList<>();
 
-        // Çıkarılan hisseleri işle
-        if (!removedTickers.isEmpty() && deactivateRemovedStocks) {
-            for (String ticker : removedTickers) {
-                try {
-                    stockRepository.deactivateStock(ticker);
-                    deactivatedStocks.add(ticker);
-                    log.info("{} S&P 500'den cikarildigi icin devre disi birakildi.", ticker);
-                } catch (Exception e) {
-                    log.error("{} devre disi birakilirken hata olustu", ticker);
-                }
-            }
-        }
-
-        // Tüm S&P 500 hisselerini işle
         for (String ticker : sp500Tickers) {
             try {
-                Map<String, Object> currentData = getYahooFinanceData(ticker, LocalDate.now(), LocalDate.now());
-                Stock existingStock = stockRepository.findByTickerSymbol(ticker).orElse(null);
-
-                if (existingStock != null) {
-                    // Eğer devre dışı bırakılmışsa tekrar aktifleştir
-                    if (!existingStock.isActive()) {
-                        existingStock.setActive(true);
-                        log.info("{} tekrar S&P 500'e eklendigi icin aktiflestirildi", ticker);
-                    }
-                    updateExistingStock(existingStock, currentData);
-                    successCount++;
-                } else {
-                    addNewStockWithHistory(ticker, currentData);
-                    newStocks.add(ticker);
-                    successCount++;
+                // Yahoo Finance'den veriyi al
+                Map<String, Object> yahooData = getYahooFinanceData(ticker, LocalDate.now(), LocalDate.now());
+                if (yahooData == null) {
+                    throw new RuntimeException("Yahoo Finance'den veri alinamadi");
                 }
 
-                Thread.sleep(200);
+                double currentPrice = extractPrice(yahooData);
+                Optional<Stock> stockOpt = stockRepository.findByTickerSymbol(ticker);
+
+                if (stockOpt.isPresent()) {
+                    // Hisse zaten dbde varsa guncelle
+                    Stock stock = stockOpt.get();
+                    // Onceki gunun fiyati stockprice listesinde var mi check
+                    boolean exists = stockPriceRepository.existsByStockIdAndDate(stock, yesterday);
+                    if (!exists) {
+                        // Kayitli degilse dune ait stockprice tablosunda kayit olustur
+                        StockPrice stockPrice = new StockPrice();
+                        stockPrice.setStock(stock);
+                        stockPrice.setPrice(currentPrice);
+                        stockPrice.setDate(yesterday);
+                        stockPriceRepository.save(stockPrice);
+                        log.info("{} icin {} tarihli fiyat eklendi: {}", ticker, yesterday.toLocalDate(), currentPrice);
+                    } else {
+                        log.info("{} icin {} tarihli fiyat zaten kayitli, eklenmedi.", ticker, yesterday.toLocalDate());
+                    }
+
+                    // Stock listesindeki price'i guncelle
+                    stockRepository.updateCurrentPrice(ticker, currentPrice);
+                    updatedStocks.add(ticker);
+                } else {
+                    // Hisse dbde yoksa
+                    Stock newStock = new Stock();
+                    newStock.setTickerSymbol(ticker);
+                    newStock.setStockName(extractStockName(yahooData));
+                    newStock.setCurrentPrice(currentPrice);
+                    stockRepository.save(newStock);
+                    newStocks.add(ticker);
+                }
+
+                successCount++;
+                Thread.sleep(200); // Rate limiting kesin bir deger degil internette tam olarak bulamadim
 
             } catch (Exception e) {
                 errorCount++;
                 failedStocks.add(ticker);
-                log.error("{} icin hata: {}", ticker, e.getMessage());
+                log.error("{} icin hata olustu: {}", ticker, e.getMessage());
             }
         }
 
-        // Özet rapor
-        log.info("=== {} Tarihli Islem Ozeti ===", today);
-        log.info("S&P 500'de Toplam: {}", sp500Tickers.size());
-        log.info("DB'de Aktif: {}", existingTickers.size());
-        log.info("Basarili Islem: {}", successCount);
-        log.info("Basarisiz Islem: {}", errorCount);
-
-        if (!newStocks.isEmpty()) {
-            log.info("Yeni Eklenen Hisseler: {}", String.join(", ", newStocks));
-        }
-
-        if (!deactivatedStocks.isEmpty()) {
-            log.info("S&P 500'den Cikarilan Hisseler: {}", String.join(", ", deactivatedStocks));
-        }
-
-        if (!failedStocks.isEmpty()) {
-            log.info("Basarisiz Olan Hisslere: {}", String.join(", ", failedStocks));
-        }
-
-        log.info("=== Islem Tamamlandi ===");
+        logSummary(yesterday.toLocalDate(), sp500Tickers.size(), successCount,
+                errorCount, failedStocks, newStocks, updatedStocks);
     }
 
     private Set<String> getSP500Components() {
         try {
             return new HashSet<>(Arrays.asList(sp500TickersString.split(",")));
         } catch (Exception e) {
-            log.error("S&P 500 listesi alınamadı: {}", e.getMessage());
+            log.error("S&P 500 listesi alinamadi: {}", e.getMessage());
             return stockRepository.findAllTickerSymbols();
         }
     }
 
-    private void updateExistingStock(Stock stock, Map<String, Object> data) {
+    private Map<String, Object> getYahooFinanceData(String ticker, LocalDate startDate, LocalDate endDate) {
         try {
-            double currentPrice = extractPrice(data);
-            LocalDateTime currentDate = extractDate(data).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            String url = String.format("https://query1.finance.yahoo.com/v8/finance/chart/%s?interval=1d&period1=%d&period2=%d",
+                    ticker,
+                    startDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(),
+                    endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond());
 
-            // Stock tablosunu guncelle
-            stock.setCurrentPrice(currentPrice);
-            stockRepository.save(stock);
+            ResponseEntity<Map> responseEntity = restTemplate.getForEntity(url, Map.class);
 
-            // StockPrice tablosuna ekle (eğer o tarih için veri yoksa)
-            //if (!stockPriceRepository.existsByStockIdAndDate(stock, currentDate)) { Test icin devre disi
-                StockPrice stockPrice = new StockPrice();
-                stockPrice.setStock(stock);
-                stockPrice.setPrice(currentPrice);
-                stockPrice.setDate(currentDate);
-                stockPriceRepository.save(stockPrice);
-            //}
-
-        } catch (Exception e) {
-            log.error("{} güncellenirken hata olustu", stock.getTickerSymbol());
-            throw e;
-        }
-    }
-
-    private void addNewStockWithHistory(String ticker, Map<String, Object> currentData) {
-        try {
-            Stock newStock = new Stock();
-            newStock.setTickerSymbol(ticker);
-            newStock.setStockName(extractStockName(currentData));
-            newStock.setCurrentPrice(extractPrice(currentData));
-            Stock savedStock = stockRepository.save(newStock);
-
-            LocalDate endDate = LocalDate.now();
-            LocalDate startDate = endDate.minusYears(1);
-
-            Map<String, Object> historicalData = getYahooFinanceData(ticker, startDate, endDate);
-            List<StockPrice> historicalPrices = extractHistoricalPrices(historicalData, savedStock);
-
-            stockPriceRepository.saveAll(historicalPrices);
-
-            // Veri bütünlüğü kontrolü
-            List<StockPrice> lastPrices = stockPriceRepository.findFirstByStockOrderByDateDesc(savedStock);
-            if (lastPrices.isEmpty() || !lastPrices.get(0).getDate().toLocalDate().equals(endDate)) {
-                log.warn("{} için son gün verisi eksik", ticker);
+            if (!responseEntity.getStatusCode().is2xxSuccessful() || responseEntity.getBody() == null) {
+                log.error("{} icin Yahoo Finance'den veri alinamadi", ticker);
+                return null;
             }
 
+            return responseEntity.getBody();
+
         } catch (Exception e) {
-            log.error("{} eklenirken hata oluştu", ticker);
-            throw e;
+            log.error("{} icin Yahoo Finance API hatasi: {}", ticker, e.getMessage());
+            return null;
         }
-    }
-
-    private Map<String, Object> getYahooFinanceData(String ticker, LocalDate startDate, LocalDate endDate) {
-        String url = String.format("https://query1.finance.yahoo.com/v8/finance/chart/%s?interval=1d&period1=%d&period2=%d",
-                ticker,
-                startDate.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(),
-                endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toEpochSecond());
-
-        ResponseEntity<Map> responseEntity = restTemplate.getForEntity(url, Map.class);
-        return responseEntity.getBody();
     }
 
     private double extractPrice(Map<String, Object> data) {
@@ -199,46 +180,30 @@ public class StockService {
             Map<String, Object> chart = (Map<String, Object>) data.get("chart");
             List<Map<String, Object>> results = (List<Map<String, Object>>) chart.get("result");
 
-            if (results != null && !results.isEmpty()) {
-                Map<String, Object> firstResult = results.get(0);
-                Map<String, Object> indicators = (Map<String, Object>) firstResult.get("indicators");
-                List<Map<String, Object>> quotes = (List<Map<String, Object>>) indicators.get("quote");
-
-                if (quotes != null && !quotes.isEmpty()) {
-                    Map<String, Object> quote = quotes.get(0);
-                    List<Double> close = (List<Double>) quote.get("close");
-
-                    if (close != null && !close.isEmpty()) {
-                        return close.get(close.size() - 1); // En son kapanış fiyatı
-                    }
-                }
+            if (results == null || results.isEmpty()) {
+                throw new RuntimeException("Results verisi boş");
             }
-            throw new RuntimeException("Fiyat verisi bulunamadı");
+
+            Map<String, Object> result = results.get(0);
+            Map<String, Object> meta = (Map<String, Object>) result.get("meta");
+
+            if (meta == null) {
+                throw new RuntimeException("Meta verisi bulunamadı");
+            }
+
+
+            if (meta.containsKey("regularMarketPrice")) {
+                return ((Number) meta.get("regularMarketPrice")).doubleValue();
+            }
+
+            throw new RuntimeException("Ne regularMarketPrice ne de previousClose değeri bulunamadı!");
+
         } catch (Exception e) {
-            throw new RuntimeException("Fiyat parse edilirken hata: " + e.getMessage());
+            log.error("Fiyat verisi cikarilirken hata: {}", e.getMessage());
+            return -1; // Eger veri yoksa -1 bu degistirilebilir
         }
     }
 
-    private LocalDateTime extractDate(Map<String, Object> data) {
-        try {
-            Map<String, Object> chart = (Map<String, Object>) data.get("chart");
-            List<Map<String, Object>> results = (List<Map<String, Object>>) chart.get("result");
-
-            if (results != null && !results.isEmpty()) {
-                Map<String, Object> firstResult = results.get(0);
-                List<Integer> timestamps = (List<Integer>) firstResult.get("timestamp");
-
-                if (timestamps != null && !timestamps.isEmpty()) {
-                    return Instant.ofEpochSecond(timestamps.get(timestamps.size() - 1).longValue())
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDateTime();
-                }
-            }
-            throw new RuntimeException("Tarih verisi bulunamadı");
-        } catch (Exception e) {
-            throw new RuntimeException("Tarih parse edilirken hata: " + e.getMessage());
-        }
-    }
 
     private String extractStockName(Map<String, Object> data) {
         try {
@@ -263,43 +228,26 @@ public class StockService {
         }
     }
 
-    private List<StockPrice> extractHistoricalPrices(Map<String, Object> data, Stock stock) {
-        List<StockPrice> prices = new ArrayList<>();
-        try {
-            Map<String, Object> chart = (Map<String, Object>) data.get("chart");
-            List<Map<String, Object>> results = (List<Map<String, Object>>) chart.get("result");
+    private void logSummary(LocalDate date, int totalStocks, int successCount,
+                            int errorCount, List<String> failedStocks,
+                            List<String> newStocks, List<String> updatedStocks) {
+        log.info("=== {} Tarihli Islem Ozeti ===", date);
+        log.info("S&P 500'de Toplam: {}", totalStocks);
+        log.info("Basarili Islem: {}", successCount); // Hisse sayisini yukselttigimizde bu kaldirilacak.
+        log.info("Basarisiz Islem: {}", errorCount);
 
-            if (results != null && !results.isEmpty()) {
-                Map<String, Object> firstResult = results.get(0);
-                List<Integer> timestamps = (List<Integer>) firstResult.get("timestamp");
-                Map<String, Object> indicators = (Map<String, Object>) firstResult.get("indicators");
-                List<Map<String, Object>> quotes = (List<Map<String, Object>>) indicators.get("quote");
-
-                if (quotes != null && !quotes.isEmpty() && timestamps != null) {
-                    Map<String, Object> quote = quotes.get(0);
-                    List<Double> closePrices = (List<Double>) quote.get("close");
-
-                    for (int i = 0; i < timestamps.size(); i++) {
-                        if (closePrices.get(i) != null) {  // null fiyatları atla
-                            StockPrice stockPrice = new StockPrice();
-                            stockPrice.setStock(stock);
-                            stockPrice.setPrice(closePrices.get(i));
-                            stockPrice.setDate(
-                                    Instant.ofEpochSecond(timestamps.get(i).longValue())
-                                            .atZone(ZoneId.systemDefault())
-                                            .toLocalDateTime()
-                            );
-                            prices.add(stockPrice);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("Geçmiş veriler parse edilirken hata: {} - {}", stock.getTickerSymbol(), e.getMessage());
+        if (!newStocks.isEmpty()) {
+            log.info("Yeni Eklenen Hisseler: {}", String.join(", ", newStocks));
         }
-        return prices;
-    }
-    public List<Stock> findAllStocks() {
-        return stockRepository.findAllStocks();
+
+        if (!updatedStocks.isEmpty()) {
+            log.info("Guncelenen Hisseler: {}", String.join(", ", updatedStocks));
+        }
+
+        if (!failedStocks.isEmpty()) {
+            log.info("Basarisiz Olan Hisseler: {}", String.join(", ", failedStocks));
+        }
+
+        log.info("=== Islem Tamamlandi ===");
     }
 }

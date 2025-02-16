@@ -20,19 +20,14 @@ public class StockController {
 
     @GetMapping("/data")
     public ResponseEntity<?> getHistoricalData() {
-        List<Stock> stocks = stockService.findAllStocks();
-        return ResponseEntity.ok(Map.of("result", stocks));
+        Map<String, Object> data = stockService.getHistoricalData();
+        return ResponseEntity.ok(data);
     }
 
     @GetMapping("/tickers")
     public ResponseEntity<List<Map<String, String>>> getAllStockNamesAndSymbols() {
-        List<Stock> stocks = stockService.findAllStocks();
-        List<Map<String, String>> result = stocks.stream()
-                .map(stock -> Map.of(
-                        "symbol", stock.getTickerSymbol(),
-                        "name", stock.getStockName()
-                ))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(result);
+        List<Map<String, String>> stocks = stockService.getAllStockNamesAndSymbols();
+        return ResponseEntity.ok(stocks);
     }
+
 }

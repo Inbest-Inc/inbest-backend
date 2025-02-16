@@ -18,9 +18,4 @@ public interface StockPriceRepository extends JpaRepository<StockPrice, StockPri
     @Query("SELECT CASE WHEN COUNT(sp) > 0 THEN true ELSE false END FROM StockPrice sp " +
             "WHERE sp.stock = :stock AND sp.date = :date")
     boolean existsByStockIdAndDate(@Param("stock") Stock stock, @Param("date") LocalDateTime date);
-
-    // Native query yerine JPA query kullanalım
-    @Query("SELECT sp FROM StockPrice sp WHERE sp.stock = :stock " +
-            "ORDER BY sp.date DESC")
-    List<StockPrice> findFirstByStockOrderByDateDesc(@Param("stock") Stock stock);
 }
