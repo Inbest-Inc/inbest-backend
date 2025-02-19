@@ -1,5 +1,8 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.dto.UserDTO;
+import com.inbest.backend.dto.UserUpdateDTO;
+import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +12,21 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService
-{
+public class UserService {
     private final UserRepository repository;
 
     public String getPublicUserInfo(String username) {
         Optional<User> user = repository.findByUsername(username);
         return user.map(value -> value.getName() + " " + value.getSurname()).orElse("John Doe");
+    }
+
+    public void updateUserNameAndSurname(String username, UserUpdateDTO userUpdateDTO) {
+        User user = repository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        user.setName(userUpdateDTO.getName());
+        user.setSurname(userUpdateDTO.getSurname());
+
+        repository.save(user);
     }
 }

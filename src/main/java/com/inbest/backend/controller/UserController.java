@@ -1,12 +1,17 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.dto.UserDTO;
+import com.inbest.backend.dto.UserUpdateDTO;
+import com.inbest.backend.exception.UserNotFoundException;
+import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.validation.Valid;
 
 import java.util.Map;
 
@@ -16,8 +21,30 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final AuthenticationService authService;
+
     @GetMapping("/{username}")
     public ResponseEntity<?> getPublicUserInfo(@PathVariable String username) {
         return ResponseEntity.ok(Map.of("name", userService.getPublicUserInfo(username)));
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String username = auth.getName();
+
+            userService.updateUserNameAndSurname(username,userUpdateDTO);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "User information updated successfully"
+            ));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An error occurred while updating user information"));
+        }
     }
 }
