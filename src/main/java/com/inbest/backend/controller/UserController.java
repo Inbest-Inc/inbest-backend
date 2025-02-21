@@ -1,12 +1,11 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.dto.DeleteAccountRequest;
 import com.inbest.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -20,4 +19,11 @@ public class UserController {
     public ResponseEntity<?> getPublicUserInfo(@PathVariable String username) {
         return ResponseEntity.ok(Map.of("name", userService.getPublicUserInfo(username)));
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteAccount(@RequestBody @Valid DeleteAccountRequest request) {
+        userService.deleteAccount(request.getPassword());
+        return ResponseEntity.ok("Account deleted successfully");
+    }
+
 }
