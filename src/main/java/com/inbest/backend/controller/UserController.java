@@ -21,7 +21,6 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private final AuthenticationService authService;
 
     @GetMapping("/{username}")
     public ResponseEntity<?> getPublicUserInfo(@PathVariable String username) {
@@ -29,7 +28,7 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
+    public ResponseEntity<?> updateUserNameAndSurname(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         try {
             userService.updateUserNameAndSurname(userUpdateDTO);
 
