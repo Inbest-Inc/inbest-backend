@@ -6,6 +6,8 @@ import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,7 +22,10 @@ public class UserService {
         return user.map(value -> value.getName() + " " + value.getSurname()).orElse("John Doe");
     }
 
-    public void updateUserNameAndSurname(String username, UserUpdateDTO userUpdateDTO) {
+    public void updateUserNameAndSurname(UserUpdateDTO userUpdateDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
         User user = repository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 

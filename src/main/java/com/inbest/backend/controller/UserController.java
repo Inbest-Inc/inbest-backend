@@ -31,10 +31,7 @@ public class UserController {
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth.getName();
-
-            userService.updateUserNameAndSurname(username,userUpdateDTO);
+            userService.updateUserNameAndSurname(userUpdateDTO);
 
             return ResponseEntity.ok(Map.of(
                     "message", "User information updated successfully"
