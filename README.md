@@ -59,5 +59,5 @@ If you encounter any issues or have questions, feel free to reach out to the tea
 ---
 
 ## License
-This project is licensed under the CTIS License. See the `LICENSE` file for details
+This project is licensed under the CTIS License. See the `LICENSE` file for details.
 
