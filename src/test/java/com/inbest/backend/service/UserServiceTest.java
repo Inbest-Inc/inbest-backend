@@ -4,6 +4,7 @@ import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,8 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class UserServiceTest {
 
@@ -35,6 +35,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+
         MockitoAnnotations.openMocks(this);
 
         // SecurityContext ayarı
@@ -42,6 +43,11 @@ class UserServiceTest {
         SecurityContextHolder.setContext(securityContext);
     }
 
+    @AfterEach
+    void tearDown() {
+        // Her testten sonra mockları resetle
+        reset(repository, securityContext, authentication);
+    }
     @Test
     void getPublicUserInfo() {
     }
