@@ -1,6 +1,7 @@
 package com.inbest.backend.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "comments", indexes = {
+@Table(name = "comment", indexes = {
         @Index(name = "idx_post_id", columnList = "post_id"),
         @Index(name = "idx_user_id", columnList = "user_id")
 })
@@ -29,6 +30,7 @@ public class Comment
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
+    @JsonBackReference
     private Post post;
 
     @ManyToOne
