@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/follow")
@@ -21,42 +22,141 @@ public class FollowController
     private AuthenticationService authenticationService;
 
     @PostMapping("/{followingId}")
-    public ResponseEntity<String> followUser(@PathVariable Long followingId)
+    public ResponseEntity<Map<String, Object>> followUser(@PathVariable Long followingId)
     {
-        int userId = authenticationService.authenticate_user();
-        followService.followUser((long) userId, followingId);
-        return ResponseEntity.ok("Followed successfully");
+        try
+        {
+            int userId = authenticationService.authenticate_user();
+            followService.followUser((long) userId, followingId);
+
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Followed successfully"
+            );
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to follow the user"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
     @DeleteMapping("/unfollow/{followingId}")
-    public ResponseEntity<String> unfollowUser(@PathVariable Long followingId)
+    public ResponseEntity<Map<String, Object>> unfollowUser(@PathVariable Long followingId)
     {
-        int userId = authenticationService.authenticate_user();
-        followService.unfollowUser((long) userId, followingId);
-        return ResponseEntity.ok("Unfollowed successfully");
+        try
+        {
+            int userId = authenticationService.authenticate_user();
+            followService.unfollowUser((long) userId, followingId);
+
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Unfollowed successfully"
+            );
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to unfollow the user"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
     @GetMapping("/{userId}/following")
-    public ResponseEntity<List<User>> getFollowing(@PathVariable Long userId)
+    public ResponseEntity<Map<String, Object>> getFollowing(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(followService.getFollowing(userId));
+        try
+        {
+            List<User> followingList = followService.getFollowing(userId);
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Following users fetched successfully",
+                    "data", followingList
+            );
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch following users"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
     @GetMapping("/{userId}/followers")
-    public ResponseEntity<List<User>> getFollowers(@PathVariable Long userId)
+    public ResponseEntity<Map<String, Object>> getFollowers(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(followService.getFollowers(userId));
+        try
+        {
+            List<User> followersList = followService.getFollowers(userId);
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Followers fetched successfully",
+                    "data", followersList
+            );
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch followers"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
     @GetMapping("/{userId}/followers/count")
-    public ResponseEntity<Long> getFollowerCount(@PathVariable Long userId)
+    public ResponseEntity<Map<String, Object>> getFollowerCount(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(followService.getFollowerCount(userId));
+        try
+        {
+            Long followerCount = followService.getFollowerCount(userId);
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Follower count fetched successfully",
+                    "data", followerCount
+            );
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch follower count"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
-    //maybe for future
-    /*@GetMapping("/{userId}/following/count")
-    public ResponseEntity<Long> getFollowingCount(@PathVariable Long userId) {
-        return ResponseEntity.ok(followService.getFollowingCount(userId));
-    }*/
+    // Future endpoint for following count
+    /*
+    @GetMapping("/{userId}/following/count")
+    public ResponseEntity<Map<String, Object>> getFollowingCount(@PathVariable Long userId) {
+        try {
+            Long followingCount = followService.getFollowingCount(userId);
+            Map<String, Object> response = Map.of(
+                "status", "success",
+                "message", "Following count fetched successfully",
+                "data", followingCount
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = Map.of(
+                "status", "error",
+                "message", "Failed to fetch following count"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+    */
 }
