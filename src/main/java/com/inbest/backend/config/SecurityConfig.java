@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/portfolio/list-by-username/**", "/").permitAll()
                 .requestMatchers("/api/portfolio/stock/metric/**", "/").permitAll()
                 .requestMatchers("/api/s3/upload/**", "/").permitAll()
+                .requestMatchers("api/get-image/{userId}/**", "/").permitAll()
                 //For frontend requests
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated());
