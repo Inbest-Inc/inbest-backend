@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .allowCredentials(true);
 
                 registry.addMapping("/**")
-                        .allowedOrigins("https://inbest-frontend.vercel.app/")
+                        .allowedOrigins("https://tryinbest.com/")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
