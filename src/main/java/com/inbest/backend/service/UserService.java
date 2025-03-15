@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
@@ -32,5 +33,18 @@ public class UserService
         }
 
         repository.delete(user);
+    }
+
+    public void updateUserNameAndSurname(UserUpdateDTO userUpdateDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        User user = repository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        user.setName(userUpdateDTO.getName());
+        user.setSurname(userUpdateDTO.getSurname());
+
+        repository.save(user);
     }
 }

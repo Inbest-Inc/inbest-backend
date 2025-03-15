@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/user/**", "/").permitAll()
                 .requestMatchers("/api/portfolio/list-by-username/**", "/").permitAll()
                 .requestMatchers("/api/portfolio/stock/metric/**", "/").permitAll()
+                .requestMatchers("/api/s3/upload/**", "/").permitAll()
                 //For frontend requests
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated());
@@ -58,7 +59,7 @@ public class SecurityConfig {
                         .allowCredentials(true);
 
                 registry.addMapping("/**")
-                        .allowedOrigins("https://inbest-frontend.vercel.app/")
+                        .allowedOrigins("https://tryinbest.com/")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
