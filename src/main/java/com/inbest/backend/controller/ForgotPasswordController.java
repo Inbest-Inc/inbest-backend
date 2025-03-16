@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class ForgotPasswordController
@@ -16,12 +19,17 @@ public class ForgotPasswordController
     private ForgotPasswordService forgotPasswordService;
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+    public  ResponseEntity<Map<String, String>> forgotPassword(@RequestParam String email) {
+        Map<String, String> response = new HashMap<>();
         try {
             forgotPasswordService.sendForgotPasswordEmail(email);
-            return ResponseEntity.ok("Password forgot email is sent successfully");
+            response.put("status", "success");
+            response.put("message", "Password reset email has been sent successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }
