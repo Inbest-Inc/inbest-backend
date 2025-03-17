@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .allowCredentials(true);
 
                 registry.addMapping("/**")
-                        .allowedOrigins("https://tryinbest.com/")
+                        .allowedOrigins("https://www.tryinbest.com/")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

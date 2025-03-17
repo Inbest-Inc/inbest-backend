@@ -34,3 +34,5 @@ build/
 
 .env
 .env.prod
+
+stock-service.log
