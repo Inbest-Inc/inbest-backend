@@ -23,7 +23,6 @@ public class LikeService {
 
     @Transactional
     public Like likePost(Long postId) {
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
@@ -40,7 +39,13 @@ public class LikeService {
         Like like = new Like();
         like.setUser(user);
         like.setPost(post);
-        return likeRepository.save(like);
+        likeRepository.save(like);
+        
+        // Update post's like count
+        post.setLikeCount(post.getLikeCount() + 1);
+        postRepository.save(post);
+        
+        return like;
     }
 
     @Transactional
@@ -57,9 +62,15 @@ public class LikeService {
                 .orElseThrow(() -> new EntityNotFoundException("Like not found"));
 
         likeRepository.delete(like);
+        
+        // Update post's like count
+        post.setLikeCount(post.getLikeCount() - 1);
+        postRepository.save(post);
     }
 
     public long getLikeCount(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         return likeRepository.countByPostId(postId);
     }
 
@@ -69,6 +80,9 @@ public class LikeService {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
 
         return likeRepository.existsByUserIdAndPostId(user.getId(), postId);
     }
