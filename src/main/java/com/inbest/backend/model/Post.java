@@ -2,10 +2,7 @@ package com.inbest.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "posts", indexes = {@Index(name = "idx_user_id", columnList = "user_id")})
 public class Post
 {
@@ -39,7 +37,7 @@ public class Post
     private List<Comment> comments;
 
     @Column(name = "like_count", nullable = false)
-    private int LikeCount = 0;
+    private int likeCount = 0;
 
     @Column(name = "is_trending")
     private Boolean isTrending;
