@@ -60,6 +60,7 @@ public class InvestmentActivityService {
         return investmentActivityRepository.findByPortfolio_PortfolioId(portfolioId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+
     }
 
     @Transactional
