@@ -5,19 +5,22 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.*;
+import com.amazonaws.util.IOUtils;
+import com.inbest.backend.dto.FileDataDTO;
 import com.inbest.backend.dto.FileUploadResponseDTO;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -35,8 +38,12 @@ public class S3Service implements FileService
 
     private AmazonS3 s3Client;
 
+    @Autowired
+    AuthenticationService authenticationService;
+
     @PostConstruct
-    private void initialize() {
+    private void initialize()
+    {
         BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
         s3Client = AmazonS3ClientBuilder.standard()
                 .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
@@ -45,32 +52,97 @@ public class S3Service implements FileService
     }
 
     @Override
-    public FileUploadResponseDTO uploadFile(MultipartFile multipartFile) {
-        FileUploadResponseDTO fileUploadResponse = new FileUploadResponseDTO();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String todayDate = dateTimeFormatter.format(LocalDate.now());
+    public FileUploadResponseDTO uploadFile(MultipartFile multipartFile)
+    {
+        int userId = authenticationService.authenticate_user();
         String filePath = "";
-        try {
-            if (multipartFile.isEmpty()) {
-                throw new RuntimeException("File is empty");
+
+        Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/gif");
+        long maxSize = 5 * 1024 * 1024; // 5MB in bytes
+
+        try
+        {
+            if (multipartFile.isEmpty())
+            {
+                return new FileUploadResponseDTO("error", "File is empty", null, null);
             }
 
+
+            String contentType = multipartFile.getContentType();
+            if (!allowedTypes.contains(contentType))
+            {
+                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG, and GIF are allowed.", null, null);
+            }
+
+            if (multipartFile.getSize() > maxSize)
+            {
+                return new FileUploadResponseDTO("error", "File size exceeds the maximum limit of 5MB.", null, null);
+            }
+
+            String originalFilename = multipartFile.getOriginalFilename();
+            if (originalFilename == null || !originalFilename.contains("."))
+            {
+                return new FileUploadResponseDTO("error", "Invalid file name.", null, null);
+            }
+            String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
+            filePath = userId + "." + extension;
+
+
             ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentType(multipartFile.getContentType());
+            objectMetadata.setContentType(contentType);
             objectMetadata.setContentLength(multipartFile.getSize());
-            filePath = todayDate + "/" + multipartFile.getOriginalFilename();
 
             s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), objectMetadata);
 
-            fileUploadResponse.setFilePath(filePath);
-            fileUploadResponse.setDateTime(LocalDateTime.now());
-        } catch (IOException e) {
-            log.error("IOException occurred: {}", e.getMessage());
-            throw new RuntimeException("Error occurred in file upload: " + e.getMessage());
-        } catch (Exception e) {
-            log.error("Error occurred during file upload: {}", e.getMessage());
-            throw new RuntimeException("Unexpected error occurred during file upload: " + e.getMessage());
+            return new FileUploadResponseDTO("success", "File uploaded successfully", filePath, LocalDateTime.now());
+
         }
-        return fileUploadResponse;
+        catch (IOException e)
+        {
+            log.error("IOException occurred: {}", e.getMessage());
+            return new FileUploadResponseDTO("error", "Error occurred during file upload: " + e.getMessage(), null, null);
+        }
+        catch (Exception e)
+        {
+            log.error("Error occurred during file upload: {}", e.getMessage());
+            return new FileUploadResponseDTO("error", "Unexpected error occurred during file upload: " + e.getMessage(), null, null);
+        }
+    }
+
+
+    @Override
+    public FileDataDTO getImage(Integer userId) throws FileNotFoundException
+    {
+        try
+        {
+            ListObjectsV2Request request = new ListObjectsV2Request()
+                    .withBucketName(bucketName)
+                    .withPrefix(userId + ".")
+                    .withMaxKeys(1);
+
+            ListObjectsV2Result result = s3Client.listObjectsV2(request);
+
+            if (result.getObjectSummaries().isEmpty())
+            {
+                throw new FileNotFoundException("No image found for user with an ID: " + userId);
+            }
+
+            String filePath = result.getObjectSummaries().get(0).getKey();
+            S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucketName, filePath));
+
+            String contentType = s3Object.getObjectMetadata().getContentType();
+
+            return new FileDataDTO(IOUtils.toByteArray(s3Object.getObjectContent()), contentType);
+        }
+        catch (FileNotFoundException e)
+        {
+            log.error("File not found: {}", e.getMessage());
+            throw e;
+        }
+        catch (Exception e)
+        {
+            log.error("Error fetching image: {}", e.getMessage());
+            throw new RuntimeException("Could not fetch image: " + e.getMessage());
+        }
     }
 }
