@@ -2,6 +2,7 @@ package com.inbest.backend.controller;
 
 import com.inbest.backend.dto.UserDTO;
 import com.inbest.backend.dto.UserUpdateDTO;
+import com.inbest.backend.dto.ChangePasswordDTO;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.UserService;
@@ -41,6 +42,30 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An error occurred while updating user information"));
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO request) {
+        try {
+            userService.changePassword(request);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Password updated successfully"
+            ));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("must be at least 6 characters")) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("newPassword", "New password must be at least 6 characters"));
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", e.getMessage()));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An error occurred while changing password"));
         }
     }
 }
