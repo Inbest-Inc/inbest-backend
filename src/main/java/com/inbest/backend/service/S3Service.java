@@ -9,6 +9,8 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.inbest.backend.dto.FileDataDTO;
 import com.inbest.backend.dto.FileUploadResponseDTO;
+import com.inbest.backend.model.User;
+import com.inbest.backend.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,9 @@ public class S3Service implements FileService
     private String secretKey;
 
     private AmazonS3 s3Client;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     AuthenticationService authenticationService;
@@ -111,10 +116,14 @@ public class S3Service implements FileService
 
 
     @Override
-    public FileDataDTO getImage(Integer userId) throws FileNotFoundException
+    public FileDataDTO getImage(String username) throws FileNotFoundException
     {
         try
         {
+            int userId = userRepository.findByUsername(username)
+                    .map(User::getId)
+                    .orElseThrow(() -> new FileNotFoundException("User not found: " + username));
+
             ListObjectsV2Request request = new ListObjectsV2Request()
                     .withBucketName(bucketName)
                     .withPrefix(userId + ".")

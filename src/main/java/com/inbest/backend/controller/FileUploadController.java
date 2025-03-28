@@ -35,12 +35,12 @@ public class FileUploadController
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/get-image/{userId}")
-    public ResponseEntity<?> getImage(@PathVariable Integer userId)
+    @GetMapping("/get-image/{username}")
+    public ResponseEntity<?> getImage(@PathVariable String username)
     {
         try
         {
-            FileDataDTO fileData = fileService.getImage(userId);
+            FileDataDTO fileData = fileService.getImage(username);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(fileData.getContentType()));
@@ -52,7 +52,7 @@ public class FileUploadController
         {
             Map<String, String> errorResponse = Map.of(
                     "status", "error",
-                    "message", "Image not found for user ID: " + userId
+                    "message", "Image not found for: " + username
             );
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
