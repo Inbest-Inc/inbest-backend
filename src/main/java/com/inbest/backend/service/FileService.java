@@ -9,6 +9,6 @@ import java.io.FileNotFoundException;
 public interface FileService {
     FileUploadResponseDTO uploadFile(MultipartFile multipartFile);
 
-    FileDataDTO getImage(Integer userId) throws FileNotFoundException;
+    FileDataDTO getImage(String username) throws FileNotFoundException;
 
 }
