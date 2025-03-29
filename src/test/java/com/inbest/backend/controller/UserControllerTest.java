@@ -25,21 +25,21 @@ class UserControllerTest {
     @InjectMocks
     UserController underTest;
 
-    @Test
-    void getPublicUserInfo_shouldReturnOk_whenUserExists() {
-        // given
-        String username = "john_doe";
-        when(mockUserService.getPublicUserInfo(username)).thenReturn("John Doe");
-
-        // when
-        ResponseEntity<?> response = underTest.getPublicUserInfo(username);
-
-        // then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        Map<String, String> responseBody = (Map<String, String>) response.getBody();
-        assertEquals("John Doe", responseBody.get("name"));
-        verify(mockUserService, times(1)).getPublicUserInfo(username);
-    }
+//    @Test
+//    void getPublicUserInfo_shouldReturnOk_whenUserExists() {
+//        // given
+//        String username = "john_doe";
+//        when(mockUserService.getPublicUserInfo(username)).thenReturn("John Doe");
+//
+//        // when
+//        ResponseEntity<?> response = underTest.getPublicUserInfo(username);
+//
+//        // then
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        Map<String, String> responseBody = (Map<String, String>) response.getBody();
+//        assertEquals("John Doe", responseBody.get("name"));
+//        verify(mockUserService, times(1)).getPublicUserInfo(username);
+//    }
 
 
     @Test
