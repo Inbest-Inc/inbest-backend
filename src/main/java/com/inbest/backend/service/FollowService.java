@@ -22,12 +22,16 @@ public class FollowService
     private UserRepository userRepository;
 
     @Transactional
-    public void followUser(Long followerId, Long followingId)
+    public void followUser(String followerName, String followingName)
     {
-        User follower = userRepository.findById(Long.valueOf(followerId))
+        if (followerName.equals(followingName)) {
+            throw new RuntimeException("You cannot follow yourself");
+        }
+
+        User follower = userRepository.findByUsername(followerName)
                 .orElseThrow(() -> new RuntimeException("Follower not found"));
 
-        User following = userRepository.findById(followingId)
+        User following = userRepository.findByUsername(followingName)
                 .orElseThrow(() -> new RuntimeException("User to follow not found"));
 
         if (followRepository.existsByFollowerAndFollowing(follower, following))
@@ -40,20 +44,20 @@ public class FollowService
     }
 
     @Transactional
-    public void unfollowUser(Long followerId, Long followingId)
+    public void unfollowUser(String followerName, String followingName)
     {
-        User follower = userRepository.findById(followerId)
+        User follower = userRepository.findByUsername(followerName)
                 .orElseThrow(() -> new RuntimeException("Follower not found"));
 
-        User following = userRepository.findById(followingId)
+        User following = userRepository.findByUsername(followingName)
                 .orElseThrow(() -> new RuntimeException("User to unfollow not found"));
 
         followRepository.deleteByFollowerAndFollowing(follower, following);
     }
 
-    public List<User> getFollowing(Long userId)
+    public List<User> getFollowing(String username)
     {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.findByFollower(user)
                 .stream()
@@ -61,9 +65,9 @@ public class FollowService
                 .collect(Collectors.toList());
     }
 
-    public List<User> getFollowers(Long userId)
+    public List<User> getFollowers(String username)
     {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.findByFollowing(user)
                 .stream()
@@ -71,9 +75,9 @@ public class FollowService
                 .collect(Collectors.toList());
     }
 
-    public Long getFollowerCount(Long userId)
+    public Long getFollowerCount(String username)
     {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.countByFollowing(user);
     }

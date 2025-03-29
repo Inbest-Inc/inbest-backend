@@ -66,11 +66,19 @@ public class AuthenticationService
         return AuthenticationResponse.builder().token(jwtToken).build();
     }
 
-    public int authenticate_user() {
+    public int authenticate_user()
+    {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String token = (String) authentication.getCredentials();
 
         return jwtService.extractUserIdFromToken(token);
+    }
+
+    public String authenticateUsername()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String token = (String) authentication.getCredentials();
+        return jwtService.extractUsername(token);
     }
 }
 
