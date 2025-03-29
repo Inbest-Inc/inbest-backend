@@ -4,7 +4,9 @@ import com.inbest.backend.dto.CommentDTO;
 import com.inbest.backend.dto.CommentResponseDTO;
 import com.inbest.backend.model.Comment;
 import com.inbest.backend.model.User;
+import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.CommentService;
+import org.apache.http.auth.AUTH;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +23,18 @@ public class CommentController
 {
 
     @Autowired
+    private AuthenticationService authenticationService;
+
+    @Autowired
     private CommentService commentService;
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, String>> createComment(@RequestBody CommentDTO commentDto, @AuthenticationPrincipal User user)
+    public ResponseEntity<Map<String, String>> createComment(@RequestBody CommentDTO commentDto)
     {
         try
         {
-            Comment comment = commentService.save(commentDto, user);
+            String username = authenticationService.authenticateUsername();
+            Comment comment = commentService.save(commentDto);
             Map<String, String> response = Map.of("status", "success", "message", "Comment created successfully");
             return ResponseEntity.ok(response);
         }

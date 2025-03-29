@@ -7,6 +7,7 @@ import com.inbest.backend.model.Post;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.CommentRepository;
 import com.inbest.backend.repository.PostRepository;
+import com.inbest.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,14 +27,28 @@ public class CommentService
     @Autowired
     private PostRepository postRepository;
 
-    public Comment save(CommentDTO commentDTO, User user)
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private AuthenticationService authenticationService;
+
+    public Comment save(CommentDTO commentDTO)
     {
+        String username = authenticationService.authenticateUsername();
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Post post = postRepository.findById(commentDTO.getPostId())
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
         Comment comment = new Comment();
-        Post post = postRepository.getById(commentDTO.getPostId());
         comment.setComment(commentDTO.getComment());
         comment.setUser(user);
         comment.setPost(post);
         comment.setCreatedDate(LocalDateTime.now());
+
         return commentRepository.save(comment);
     }
 
