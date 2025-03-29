@@ -75,7 +75,7 @@ class UserControllerTest {
         assertEquals(404, response.getStatusCodeValue());
         Map<String, String> responseBody = (Map<String, String>) response.getBody();
 
-        assertEquals("User not found", responseBody.get("error"));
+        assertEquals("User not found", responseBody.get("message"));
     }
     @Test
     void updateUser_shouldReturnInternalServerError_whenUnexpectedExceptionIsThrown() {
@@ -94,7 +94,7 @@ class UserControllerTest {
         assertEquals(500, response.getStatusCodeValue());
 
         Map<String, String> responseBody = (Map<String, String>) response.getBody();
-        assertEquals("An error occurred while updating user information", responseBody.get("error"));
+        assertEquals("An error occurred while updating user information", responseBody.get("message"));
     }
 
     @Test
@@ -111,7 +111,7 @@ class UserControllerTest {
         // then
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         Map<String, String> responseBody = (Map<String, String>) response.getBody();
-        assertEquals("An error occurred while updating user information", responseBody.get("error"));
+        assertEquals("An error occurred while updating user information", responseBody.get("message"));
     }
 
      /*@Test
