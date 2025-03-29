@@ -60,6 +60,13 @@ public class PostService {
                 .map(this::convertToDTO);
     }
 
+    public List<PostResponseDTO> getPostsByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return postRepository.findByUser(user).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public void deletePost(Long id) {
@@ -73,7 +80,6 @@ public class PostService {
         dto.setId(post.getId());
         dto.setContent(post.getContent());
         dto.setCreatedAt(post.getCreatedAt());
-        dto.setUserId(post.getUser().getId().longValue());
         dto.setUsername(post.getUser().getUsername());
         dto.setStockSymbol(post.getInvestmentActivity().getStock().getTickerSymbol());
         dto.setActionType(post.getInvestmentActivity().getActionType().name());

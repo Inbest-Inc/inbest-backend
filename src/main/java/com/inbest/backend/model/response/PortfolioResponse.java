@@ -11,5 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PortfolioResponse
 {
-    private int portfolioId;
+    private String status;
+    private String message;
+    private int data;
 }

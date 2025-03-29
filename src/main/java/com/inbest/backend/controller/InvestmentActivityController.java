@@ -41,22 +41,22 @@ public class InvestmentActivityController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllActivities() {
-        try {
-            List<InvestmentActivityResponseDTO> activities = investmentActivityService.getAllActivities();
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Investment activities retrieved successfully");
-            response.put("data", activities);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
+//    @GetMapping   Do not need to get all investment activites
+//    public ResponseEntity<?> getAllActivities() {
+//        try {
+//            List<InvestmentActivityResponseDTO> activities = investmentActivityService.getAllActivities();
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("status", "success");
+//            response.put("message", "Investment activities retrieved successfully");
+//            response.put("data", activities);
+//            return ResponseEntity.ok(response);
+//        } catch (Exception e) {
+//            Map<String, String> response = new HashMap<>();
+//            response.put("status", "error");
+//            response.put("message", e.getMessage());
+//            return ResponseEntity.badRequest().body(response);
+//        }
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getActivityById(@PathVariable Long id) {
@@ -90,6 +90,11 @@ public class InvestmentActivityController {
             response.put("message", "Portfolio activities retrieved successfully");
             response.put("data", activities);
             return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(404).body(response);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
