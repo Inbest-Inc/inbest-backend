@@ -15,7 +15,6 @@ public class PostResponseDTO {
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long userId;
     private String username;
     private String stockSymbol;
     private String actionType;

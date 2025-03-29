@@ -2,11 +2,9 @@ package com.inbest.backend.controller;
 
 import com.inbest.backend.dto.PortfolioDTO;
 import com.inbest.backend.model.response.PortfolioGetResponse;
-import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.response.GenericResponse;
 import com.inbest.backend.model.response.PortfolioResponse;
 import com.inbest.backend.service.PortfolioService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,8 +57,9 @@ public class PortfolioController
         try
         {
             int portfolioId = portfolioService.createPortfolio(portfolioDTO);
-            PortfolioResponse response = new PortfolioResponse(portfolioId);
+            PortfolioResponse response = new PortfolioResponse("success","Portfolio created successfully",portfolioId);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
+
         }
         catch (IllegalArgumentException e)
         {

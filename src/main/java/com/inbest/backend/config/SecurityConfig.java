@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/api/user/**",
                                 "/api/portfolio/list-by-username/**",
                                 "/api/portfolio/stock/metric/**",
-                                "/api/s3/upload/**"
+                                "/api/s3/upload/**",
+                                "/api/posts/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()

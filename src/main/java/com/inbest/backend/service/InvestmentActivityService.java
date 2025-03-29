@@ -45,11 +45,11 @@ public class InvestmentActivityService {
         return convertToDTO(savedActivity);
     }
 
-    public List<InvestmentActivityResponseDTO> getAllActivities() {
-        return investmentActivityRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+//    public List<InvestmentActivityResponseDTO> getAllActivities() {
+//        return investmentActivityRepository.findAll().stream()
+//                .map(this::convertToDTO)
+//                .collect(Collectors.toList());
+//    }
 
     public Optional<InvestmentActivityResponseDTO> getActivityById(Long id) {
         return investmentActivityRepository.findById(id)
@@ -57,10 +57,12 @@ public class InvestmentActivityService {
     }
 
     public List<InvestmentActivityResponseDTO> getActivitiesByPortfolioId(Integer portfolioId) {
+        if (!portfolioRepository.existsById(Long.valueOf(portfolioId))) {
+            throw new EntityNotFoundException("Portfolio can not be found");
+        }
         return investmentActivityRepository.findByPortfolio_PortfolioId(portfolioId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
-
     }
 
     @Transactional

@@ -1,17 +1,13 @@
 package com.inbest.backend.controller;
 
-import com.inbest.backend.dto.UserDTO;
 import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.dto.ChangePasswordDTO;
 import com.inbest.backend.exception.UserNotFoundException;
-import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.validation.Valid;
 
 import java.util.Map;
@@ -34,14 +30,15 @@ public class UserController {
             userService.updateUserNameAndSurname(userUpdateDTO);
 
             return ResponseEntity.ok(Map.of(
+                    "status", "success",
                     "message", "User information updated successfully"
             ));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("status", "error", "message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An error occurred while updating user information"));
+                    .body(Map.of("status", "error", "message", "An error occurred while updating user information"));
         }
     }
 
@@ -50,22 +47,23 @@ public class UserController {
         try {
             userService.changePassword(request);
             return ResponseEntity.ok(Map.of(
+                    "status", "success",
                     "message", "Password updated successfully"
             ));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("status", "error", "error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("must be at least 6 characters")) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("newPassword", "New password must be at least 6 characters"));
-            } else {
+                        .body(Map.of("status", "error", "error", "New password must be at least 6 characters"));
+            }  else {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of("status", "error", "error", e.getMessage()));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An error occurred while changing password"));
+                    .body(Map.of("status", "error", "error", "An error occurred while changing password"));
         }
     }
 }
