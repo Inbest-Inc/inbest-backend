@@ -3,6 +3,9 @@ package com.inbest.backend.controller;
 import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.dto.ChangePasswordDTO;
 import com.inbest.backend.exception.UserNotFoundException;
+import com.inbest.backend.service.FileService;
+import com.inbest.backend.service.FollowService;
+import com.inbest.backend.service.S3Service;
 import com.inbest.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,18 +13,45 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController
+{
 
     private final UserService userService;
+    private final S3Service s3Service;
+    private final FollowService followService;
 
     @GetMapping("/{username}")
-    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username) {
-        return ResponseEntity.ok(Map.of("name", userService.getPublicUserInfo(username)));
+    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username)
+    {
+        try
+        {
+            Long followerCount = followService.getFollowerCount(username);
+
+            String imageUrl = s3Service.getImageUrl(username);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "User information fetched successfully");
+            response.put("fullName", userService.getPublicUserInfo(username));
+            response.put("followerCount", followerCount);
+            response.put("imageUrl", imageUrl);
+
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch user information"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
 
     @PutMapping("/update")
