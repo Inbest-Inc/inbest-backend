@@ -21,13 +21,13 @@ public class FollowController
     @Autowired
     private AuthenticationService authenticationService;
 
-    @PostMapping("/{followingId}")
-    public ResponseEntity<Map<String, Object>> followUser(@PathVariable Long followingId)
+    @PostMapping("/{followingName}")
+    public ResponseEntity<Map<String, Object>> followUser(@PathVariable String followingName)
     {
         try
         {
-            int userId = authenticationService.authenticate_user();
-            followService.followUser((long) userId, followingId);
+            String followerName = authenticationService.authenticateUsername();
+            followService.followUser(followerName, followingName);
 
             Map<String, Object> response = Map.of(
                     "status", "success",
@@ -45,13 +45,13 @@ public class FollowController
         }
     }
 
-    @DeleteMapping("/unfollow/{followingId}")
-    public ResponseEntity<Map<String, Object>> unfollowUser(@PathVariable Long followingId)
+    @DeleteMapping("/unfollow/{followingName}")
+    public ResponseEntity<Map<String, Object>> unfollowUser(@PathVariable String followingName)
     {
         try
         {
-            int userId = authenticationService.authenticate_user();
-            followService.unfollowUser((long) userId, followingId);
+            String followerName = authenticationService.authenticateUsername();
+            followService.unfollowUser(followerName, followingName);
 
             Map<String, Object> response = Map.of(
                     "status", "success",
@@ -69,12 +69,12 @@ public class FollowController
         }
     }
 
-    @GetMapping("/{userId}/following")
-    public ResponseEntity<Map<String, Object>> getFollowing(@PathVariable Long userId)
+    @GetMapping("/{username}/following")
+    public ResponseEntity<Map<String, Object>> getFollowing(@PathVariable String username)
     {
         try
         {
-            List<User> followingList = followService.getFollowing(userId);
+            List<User> followingList = followService.getFollowing(username);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "Following users fetched successfully",
@@ -92,12 +92,12 @@ public class FollowController
         }
     }
 
-    @GetMapping("/{userId}/followers")
-    public ResponseEntity<Map<String, Object>> getFollowers(@PathVariable Long userId)
+    @GetMapping("/{username}/followers")
+    public ResponseEntity<Map<String, Object>> getFollowers(@PathVariable String username)
     {
         try
         {
-            List<User> followersList = followService.getFollowers(userId);
+            List<User> followersList = followService.getFollowers(username);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "Followers fetched successfully",
@@ -115,12 +115,12 @@ public class FollowController
         }
     }
 
-    @GetMapping("/{userId}/followers/count")
-    public ResponseEntity<Map<String, Object>> getFollowerCount(@PathVariable Long userId)
+    @GetMapping("/{username}/followers/count")
+    public ResponseEntity<Map<String, Object>> getFollowerCount(@PathVariable String username)
     {
         try
         {
-            Long followerCount = followService.getFollowerCount(userId);
+            Long followerCount = followService.getFollowerCount(username);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "Follower count fetched successfully",
