@@ -11,5 +11,4 @@ public class CommentDTO
 {
     private Long postId;
     private String comment;
-    private String user;
 }
