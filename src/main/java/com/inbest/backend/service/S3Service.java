@@ -60,10 +60,11 @@ public class S3Service implements FileService
     public FileUploadResponseDTO uploadFile(MultipartFile multipartFile)
     {
         int userId = authenticationService.authenticate_user();
-        String filePath = "";
+        String filePath;
 
-        Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/gif");
-        long maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/jpg");
+        Set<String> allowedExtensions = Set.of("jpeg", "png", "jpg");
+        long maxSize = 5 * 1024 * 1024;
 
         try
         {
@@ -72,11 +73,10 @@ public class S3Service implements FileService
                 return new FileUploadResponseDTO("error", "File is empty", null, null);
             }
 
-
             String contentType = multipartFile.getContentType();
             if (!allowedTypes.contains(contentType))
             {
-                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG, and GIF are allowed.", null, null);
+                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG and JPG are allowed.", null, null);
             }
 
             if (multipartFile.getSize() > maxSize)
@@ -89,9 +89,14 @@ public class S3Service implements FileService
             {
                 return new FileUploadResponseDTO("error", "Invalid file name.", null, null);
             }
-            String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
-            filePath = userId + "." + extension;
 
+            String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+            if (!allowedExtensions.contains(extension))
+            {
+                return new FileUploadResponseDTO("error", "Invalid file extension. Only .jpeg and .png files are allowed.", null, null);
+            }
+
+            filePath = userId + "." + extension;
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentType(contentType);
@@ -152,6 +157,44 @@ public class S3Service implements FileService
         {
             log.error("Error fetching image: {}", e.getMessage());
             throw new RuntimeException("Could not fetch image: " + e.getMessage());
+        }
+    }
+
+    public String getImageUrl(String username) throws FileNotFoundException
+    {
+        try
+        {
+            int userId = userRepository.findByUsername(username)
+                    .map(User::getId)
+                    .orElseThrow(() -> new FileNotFoundException("User not found: " + username));
+
+            ListObjectsV2Request request = new ListObjectsV2Request()
+                    .withBucketName(bucketName)
+                    .withPrefix(userId + ".")
+                    .withMaxKeys(1);
+
+            ListObjectsV2Result result = s3Client.listObjectsV2(request);
+
+            if (result.getObjectSummaries().isEmpty())
+            {
+                throw new FileNotFoundException("No image found for user with an ID: " + userId);
+            }
+
+            String filePath = result.getObjectSummaries().get(0).getKey();
+
+            String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
+
+            return imageUrl;
+        }
+        catch (FileNotFoundException e)
+        {
+            log.error("File not found: {}", e.getMessage());
+            throw e;
+        }
+        catch (Exception e)
+        {
+            log.error("Error fetching image URL: {}", e.getMessage());
+            throw new RuntimeException("Could not fetch image URL: " + e.getMessage());
         }
     }
 }
