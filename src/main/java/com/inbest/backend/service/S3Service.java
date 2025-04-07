@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.inbest.backend.dto.FileDataDTO;
 import com.inbest.backend.dto.FileUploadResponseDTO;
+import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -127,7 +128,7 @@ public class S3Service implements FileService
         {
             int userId = userRepository.findByUsername(username)
                     .map(User::getId)
-                    .orElseThrow(() -> new FileNotFoundException("User not found: " + username));
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
             ListObjectsV2Request request = new ListObjectsV2Request()
                     .withBucketName(bucketName)
@@ -136,7 +137,7 @@ public class S3Service implements FileService
 
             ListObjectsV2Result result = s3Client.listObjectsV2(request);
 
-            if (result.getObjectSummaries().isEmpty())
+            if (!result.getObjectSummaries().isEmpty())
             {
                 throw new FileNotFoundException("No image found for user with an ID: " + userId);
             }
@@ -162,11 +163,9 @@ public class S3Service implements FileService
 
     public String getImageUrl(String username) throws FileNotFoundException
     {
-        try
-        {
             int userId = userRepository.findByUsername(username)
                     .map(User::getId)
-                    .orElseThrow(() -> new FileNotFoundException("User not found: " + username));
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
             ListObjectsV2Request request = new ListObjectsV2Request()
                     .withBucketName(bucketName)
@@ -175,26 +174,13 @@ public class S3Service implements FileService
 
             ListObjectsV2Result result = s3Client.listObjectsV2(request);
 
-            if (result.getObjectSummaries().isEmpty())
+            if (!result.getObjectSummaries().isEmpty())
             {
-                throw new FileNotFoundException("No image found for user with an ID: " + userId);
+                String filePath = result.getObjectSummaries().get(0).getKey();
+                String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
+
+                return imageUrl;
             }
-
-            String filePath = result.getObjectSummaries().get(0).getKey();
-
-            String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
-
-            return imageUrl;
-        }
-        catch (FileNotFoundException e)
-        {
-            log.error("File not found: {}", e.getMessage());
-            throw e;
-        }
-        catch (Exception e)
-        {
-            log.error("Error fetching image URL: {}", e.getMessage());
-            throw new RuntimeException("Could not fetch image URL: " + e.getMessage());
-        }
+            return null;
     }
 }
