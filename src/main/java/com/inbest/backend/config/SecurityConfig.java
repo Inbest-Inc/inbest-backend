@@ -60,7 +60,8 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
-                "https://www.tryinbest.com"
+                "https://www.tryinbest.com",
+                "https://api.tryinbest.com"
         ));
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
