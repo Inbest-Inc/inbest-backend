@@ -27,5 +27,5 @@ public class InvestmentActivityCreateDTO {
 
     @NotNull(message = "Stock quantity cannot be null")
     @Positive(message = "Stock quantity must be positive")
-    private Integer stockQuantity;
+    private Double stockQuantity;
 } 

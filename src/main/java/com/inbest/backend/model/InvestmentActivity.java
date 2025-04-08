@@ -38,7 +38,7 @@ public class InvestmentActivity {
     private BigDecimal amount;
 
     @Column(name = "stock_quantity", nullable = false)
-    private Integer stockQuantity;
+    private Double stockQuantity;
 
     public enum ActionType {
         BUY,

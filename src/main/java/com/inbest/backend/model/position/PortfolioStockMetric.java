@@ -28,7 +28,7 @@ public class PortfolioStockMetric {
     private LocalDateTime date;
 
     @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    private Double quantity;
 
     @Column(name = "average_cost", nullable = false, precision = 10, scale = 2)
     private BigDecimal averageCost;

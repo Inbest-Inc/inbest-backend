@@ -25,7 +25,7 @@ public class PortfolioStockController
     private final AuthenticationService authenticationService;
 
     @PostMapping("/add")
-    public ResponseEntity<?> addStockToPortfolio(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Integer quantity)
+    public ResponseEntity<?> addStockToPortfolio(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Double quantity)
     {
         try
         {
@@ -46,7 +46,7 @@ public class PortfolioStockController
     }
 
     @PutMapping("/update/quantity")
-    public ResponseEntity<?> updateStockQuantity(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Integer quantity)
+    public ResponseEntity<?> updateStockQuantity(@RequestParam Integer portfolioId, @RequestParam String tickerName, @RequestParam Double quantity)
     {
         try
         {

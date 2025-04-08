@@ -38,7 +38,7 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public void addStockToPortfolio(Integer portfolioId, String tickerName, Integer quantity) throws Exception
+    public void addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -57,7 +57,7 @@ public class PortfolioStockService
         PortfolioStockModel portfolioStockModel = PortfolioStockModel.builder()
                 .portfolio(portfolio)
                 .stock(stock)
-                .quantity(quantity.doubleValue())
+                .quantity(quantity)
                 .build();
 
         portfolioStockRepository.save(portfolioStockModel);
@@ -81,7 +81,7 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public void updateQuantity(Integer portfolioId, String tickerName, Integer quantity) throws Exception
+    public void updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -103,7 +103,7 @@ public class PortfolioStockService
                 .findByPortfolioIdAndStockId(portfolioId, stock.getStockId())
                 .orElseThrow(() -> new Exception("Metrics not found"));
 
-        int oldQuantity = portfolioStockMetric.getQuantity();
+        Double oldQuantity = portfolioStockMetric.getQuantity();
         BigDecimal currentPrice = BigDecimal.valueOf(stock.getCurrentPrice());
 
         BigDecimal avgCost = portfolioStockMetric.getAverageCost();
@@ -125,7 +125,7 @@ public class PortfolioStockService
 
         totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
 
-        portfolioStockModel.setQuantity((double) quantity);
+        portfolioStockModel.setQuantity(quantity);
         portfolioStockRepository.save(portfolioStockModel);
 
         portfolioStockMetric.setQuantity(quantity);

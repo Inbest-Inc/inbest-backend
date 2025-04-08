@@ -18,6 +18,6 @@ public class InvestmentActivityResponseDTO {
     private String stockName;
     private String actionType;
     private BigDecimal amount;
-    private Integer stockQuantity;
+    private Double stockQuantity;
     private LocalDateTime date;
 } 
