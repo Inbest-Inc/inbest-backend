@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -19,9 +21,25 @@ public class AuthController
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request)
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request)
     {
-        return ResponseEntity.ok(service.register(request));
+        try
+        {
+            service.register(request);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Registration successful. Please check your email to verify your account.",
+                    "status", "success"
+            ));
+        }
+        catch (IllegalArgumentException e)
+        {
+
+            return ResponseEntity.badRequest().body(Map.of(
+                    "message", e.getMessage(),
+                    "status", "error"
+            ));
+        }
     }
 
     @PostMapping("/login")
@@ -31,17 +49,23 @@ public class AuthController
     }
 
     @GetMapping("/verify-email")
-    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token)
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam("token") String token)
     {
         boolean isVerified = service.verifyEmail(token);
 
         if (isVerified)
         {
-            return ResponseEntity.ok("Email verified successfully. You can log in.");
+            return ResponseEntity.ok(Map.of(
+                    "message", "Email verified successfully. You can log in.",
+                    "status", "success"
+            ));
         }
         else
         {
-            return ResponseEntity.status(400).body("Invalid or expired verification token.");
+            return ResponseEntity.status(400).body(Map.of(
+                    "message", "Invalid or expired verification token.",
+                    "status", "error"
+            ));
         }
     }
 }

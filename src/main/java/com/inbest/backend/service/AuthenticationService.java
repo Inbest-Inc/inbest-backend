@@ -10,6 +10,7 @@ import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
 import com.inbest.backend.service.JwtService; // Bean olarak oluşturulduğu için kullanilmamis gibi gozukuyor
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +55,7 @@ public class AuthenticationService
 
         String token = tokenService.createToken(user, TokenType.EMAIL_VERIFICATION, 30);
 
-        String verificationLink = "http://tryinbest.com/verify?token=" + token;
+        String verificationLink = "https://tryinbest.com/verify?token=" + token;
 
         emailService.sendWelcomeEmail(user.getEmail(), verificationLink);
 

@@ -26,7 +26,7 @@ public class ForgotPasswordService
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String resetToken = tokenService.createToken(user, TokenType.PASSWORD_RESET, EXPIRATION_TIME);
-        String resetLink = "http://tryinbest.com/api/resetPassword?token=" + resetToken;
+        String resetLink = "https://tryinbest.com/api/resetPassword?token=" + resetToken;
 
         emailService.sendForgotPasswordEmail(user.getEmail(), user.getName(), resetLink);
     }
