@@ -102,7 +102,7 @@ public class S3Service implements FileService
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentType(contentType);
             objectMetadata.setContentLength(multipartFile.getSize());
-
+            objectMetadata.setCacheControl("no-cache, no-store, must-revalidate");
             s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), objectMetadata);
 
             return new FileUploadResponseDTO("success", "File uploaded successfully", filePath, LocalDateTime.now());
@@ -137,9 +137,9 @@ public class S3Service implements FileService
 
             ListObjectsV2Result result = s3Client.listObjectsV2(request);
 
-            if (!result.getObjectSummaries().isEmpty())
+            if (result.getObjectSummaries().isEmpty())
             {
-                throw new FileNotFoundException("No image found for user with an ID: " + userId);
+                throw new FileNotFoundException("No image found for user with an username: " + username);
             }
 
             String filePath = result.getObjectSummaries().get(0).getKey();
@@ -179,7 +179,7 @@ public class S3Service implements FileService
                 String filePath = result.getObjectSummaries().get(0).getKey();
                 String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
 
-                return imageUrl;
+                return imageUrl + "?t=" + System.currentTimeMillis();
             }
             return null;
     }
