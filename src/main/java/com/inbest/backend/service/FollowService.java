@@ -24,7 +24,8 @@ public class FollowService
     @Transactional
     public void followUser(String followerName, String followingName)
     {
-        if (followerName.equals(followingName)) {
+        if (followerName.equals(followingName))
+        {
             throw new RuntimeException("You cannot follow yourself");
         }
 
@@ -89,4 +90,21 @@ public class FollowService
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.countByFollower(user);
     }*/
+
+    public boolean isFollowing(String followerName, String followingName)
+    {
+        if (followerName.equals(followingName))
+        {
+            return false;
+        }
+
+        User follower = userRepository.findByUsername(followerName)
+                .orElseThrow(() -> new RuntimeException("Follower not found"));
+
+        User following = userRepository.findByUsername(followingName)
+                .orElseThrow(() -> new RuntimeException("User to follow not found"));
+
+        return followRepository.existsByFollowerAndFollowing(follower, following);
+    }
+
 }

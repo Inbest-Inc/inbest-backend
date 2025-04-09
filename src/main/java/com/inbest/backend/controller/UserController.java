@@ -3,12 +3,10 @@ package com.inbest.backend.controller;
 import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.dto.ChangePasswordDTO;
 import com.inbest.backend.exception.UserNotFoundException;
-import com.inbest.backend.service.FileService;
-import com.inbest.backend.service.FollowService;
-import com.inbest.backend.service.S3Service;
-import com.inbest.backend.service.UserService;
+import com.inbest.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
@@ -27,20 +25,39 @@ public class UserController
     private final FollowService followService;
 
     @GetMapping("/{username}")
-    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username)
+    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username, Authentication authentication)
     {
         try
         {
             Long followerCount = followService.getFollowerCount(username);
-
             String imageUrl = s3Service.getImageUrl(username);
+            String fullName = userService.getPublicUserInfo(username);
 
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "User information fetched successfully");
-            response.put("fullName", userService.getPublicUserInfo(username));
+            response.put("fullName", fullName);
             response.put("followerCount", followerCount);
             response.put("imageUrl", imageUrl);
+
+            if (authentication != null && authentication.isAuthenticated())
+            {
+                String currentUsername = authentication.getName();
+
+                if (!currentUsername.equals(username))
+                {
+                    boolean isFollowing = followService.isFollowing(currentUsername, username);
+                    response.put("following", isFollowing);
+                }
+                else
+                {
+                    response.put("following", false);
+                }
+            }
+            else
+            {
+                response.put("following", false); // authorize degilse following: false
+            }
 
             return ResponseEntity.ok(response);
         }
