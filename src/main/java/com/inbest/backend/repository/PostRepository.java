@@ -14,4 +14,6 @@ public interface PostRepository extends JpaRepository<Post, Long>
 
     @Query("SELECT p FROM Post p ORDER BY p.trendScore DESC")
     List<Post> findAllOrderByScoreDesc();
+
+    List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
 }

@@ -62,6 +62,32 @@ public class PostController {
         }
     }
 
+    @GetMapping("/followed")
+    public ResponseEntity<?> getFollowedUsersPosts() {
+        try {
+            List<PostResponseDTO> followedPosts = postService.getPostsFromFollowedUsers();
+            
+            if (followedPosts.isEmpty()) {
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "No posts found from followed users"
+                ));
+            }
+            
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Posts from followed users fetched successfully",
+                    "data", followedPosts
+            ));
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "An error occurred while fetching posts from followed users");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    
     @GetMapping("/{id}")
     public ResponseEntity<?> getPostById(@PathVariable Long id) {
         try {
@@ -140,4 +166,5 @@ public class PostController {
                 "data", trendingPosts
         ));
     }
+
 }

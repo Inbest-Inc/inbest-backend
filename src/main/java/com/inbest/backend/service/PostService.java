@@ -27,6 +27,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final InvestmentActivityRepository investmentActivityRepository;
+    private final FollowService followService;
 
     @Transactional
     public PostResponseDTO createPost(PostCreateDTO postDTO) {
@@ -54,6 +55,20 @@ public class PostService {
 
     public List<PostResponseDTO> getAllPosts() {
         return postRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PostResponseDTO> getPostsFromFollowedUsers() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        
+        List<User> followedUsers = followService.getFollowing(username);
+        
+        return postRepository.findByUserInOrderByCreatedAtDesc(followedUsers).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -115,6 +130,8 @@ public void updateAllPostScores() {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
+  
 
     private PostResponseDTO convertToDTO(Post post) {
         PostResponseDTO dto = new PostResponseDTO();
