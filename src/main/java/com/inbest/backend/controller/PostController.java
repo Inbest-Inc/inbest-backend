@@ -1,3 +1,4 @@
+
 package com.inbest.backend.controller;
 
 import com.inbest.backend.dto.PostCreateDTO;
@@ -24,7 +25,14 @@ public class PostController {
     @PostMapping
     public ResponseEntity<?> createPost(@Valid @RequestBody PostCreateDTO postDTO) {
         try {
-            return ResponseEntity.ok(postService.createPost(postDTO));
+            PostResponseDTO createdPost = postService.createPost(postDTO);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Post created successfully");
+            response.put("post", createdPost);
+
+            return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
@@ -39,10 +47,14 @@ public class PostController {
             List<PostResponseDTO> allPosts = postService.getAllPosts();
             if (allPosts.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of(
-                        "status", "error",
-                        "message", "Posts not found"));
+                        "status", "success",
+                        "message", "User do not have any posts"));
             }
-            return ResponseEntity.ok(allPosts);
+            return ResponseEntity.status(404).body(Map.of(
+                    "status", "success",
+                    "message", "Posts found!",
+                    "data",allPosts
+            ));
         } catch (DataAccessException e) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
@@ -56,7 +68,11 @@ public class PostController {
         try {
             Optional<PostResponseDTO> post = postService.getPostById(id);
             if (post.isPresent()) {
-                return ResponseEntity.ok(post.get());
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "Posts found!",
+                        "data",post.get()
+                ));
             }
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
@@ -78,7 +94,11 @@ public class PostController {
                         "status", "error",
                         "message", "No posts found for user: " + username));
             }
-            return ResponseEntity.ok(posts);
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Posts found!",
+                    "data",posts
+            ));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
