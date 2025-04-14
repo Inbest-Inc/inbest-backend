@@ -1,4 +1,3 @@
-
 package com.inbest.backend.controller;
 
 import com.inbest.backend.dto.PostCreateDTO;
@@ -46,11 +45,11 @@ public class PostController {
         try {
             List<PostResponseDTO> allPosts = postService.getAllPosts();
             if (allPosts.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of(
+                return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
                         "message", "User do not have any posts"));
             }
-            return ResponseEntity.status(404).body(Map.of(
+            return ResponseEntity.status(200).body(Map.of(
                     "status", "success",
                     "message", "Posts found!",
                     "data",allPosts
@@ -128,5 +127,17 @@ public class PostController {
             response.put("message", "An error occurred while accessing the database. Please try again later.");
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+
+    @GetMapping("/trending")
+    public ResponseEntity<?> getTrendingPosts() {
+        List<PostResponseDTO> trendingPosts = postService.getTrendingPosts();
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Trending posts fetched successfully",
+                "data", trendingPosts
+        ));
     }
 }

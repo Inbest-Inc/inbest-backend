@@ -20,5 +20,6 @@ public class PostResponseDTO {
     private String actionType;
     private BigDecimal amount;
     private int likeCount;
+    private int commentCount;
     private boolean isTrending;
 }

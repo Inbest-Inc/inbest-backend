@@ -15,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,6 +44,7 @@ public class PostService {
         post.setUser(user);
         post.setInvestmentActivity(investmentActivity);
         post.setLikeCount(0);
+        post.setCommentCount(0);
         post.setIsTrending(false);
        
 
@@ -75,6 +78,44 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    @Transactional
+public void updateAllPostScores() {
+    List<Post> posts = postRepository.findAll();
+    for (Post post : posts) {
+        double score = calculatePostScore(post);
+        post.setTrendScore(score);
+    }
+    postRepository.saveAll(posts);
+}
+
+    private double calculatePostScore(Post post) {
+        // Get post age in hours
+        long minutesSinceCreation = ChronoUnit.MINUTES.between(post.getCreatedAt(), LocalDateTime.now());
+        int hoursSinceCreation = (int)Math.ceil(minutesSinceCreation / 60.0);
+
+        // Weight factors
+        double likeWeight = 1.0;
+        double commentWeight = 2.0; // Comments are weighted more than likes
+        double timeDecayFactor = 0.95; // Score decays over time
+        
+        // Calculate base score
+        double baseScore = (post.getLikeCount() * likeWeight) + 
+                          (post.getCommentCount() * commentWeight);
+        
+        // Apply time decay
+        double timeDecay = Math.pow(timeDecayFactor, hoursSinceCreation);
+        
+        return baseScore * timeDecay;
+    }
+
+    public List<PostResponseDTO> getTrendingPosts() {
+        return postRepository.findAllOrderByScoreDesc()
+                .stream()
+                .limit(10) //trend post size
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private PostResponseDTO convertToDTO(Post post) {
         PostResponseDTO dto = new PostResponseDTO();
         dto.setId(post.getId());
@@ -85,6 +126,7 @@ public class PostService {
         dto.setActionType(post.getInvestmentActivity().getActionType().name());
         dto.setAmount(post.getInvestmentActivity().getAmount());
         dto.setLikeCount(post.getLikeCount());
+        dto.setCommentCount(post.getCommentCount());
         dto.setTrending(post.getIsTrending());
         return dto;
     }

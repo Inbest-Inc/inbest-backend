@@ -108,7 +108,11 @@ class PostControllerTest {
         // then
         verify(mockPostService, times(1)).getAllPosts();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockPosts, response.getBody());
+        Map<String, String> responseBody = (Map<String, String>) response.getBody();
+        assertEquals("success", responseBody.get("status"));
+        assertEquals("Posts found!", responseBody.get("message"));
+        assertEquals(mockPosts, responseBody.get("data"));
+
     }
 
     @Test
@@ -121,10 +125,10 @@ class PostControllerTest {
 
         // then
         verify(mockPostService, times(1)).getAllPosts();
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, String> responseBody = (Map<String, String>) response.getBody();
-        assertEquals("error", responseBody.get("status"));
-        assertEquals("Posts not found", responseBody.get("message"));
+        assertEquals("success", responseBody.get("status"));
+        assertEquals("User do not have any posts", responseBody.get("message"));
     }
 
     @Test
@@ -157,7 +161,11 @@ class PostControllerTest {
         // then
         verify(mockPostService, times(1)).getPostById(postId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockPost, response.getBody());
+        Map<String, String> responseBody = (Map<String, String>) response.getBody();
+        assertEquals("success", responseBody.get("status"));
+        assertEquals("Posts found!", responseBody.get("message"));
+        assertEquals(mockPost, responseBody.get("data"));
+
     }
 
     @Test
@@ -208,7 +216,10 @@ class PostControllerTest {
         // then
         verify(mockPostService, times(1)).getPostsByUsername(username);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockPosts, response.getBody());
+        Map<String, String> responseBody = (Map<String, String>) response.getBody();
+        assertEquals("success", responseBody.get("status"));
+        assertEquals("Posts found!", responseBody.get("message"));
+        assertEquals(mockPosts, responseBody.get("data"));
     }
 
     @Test
