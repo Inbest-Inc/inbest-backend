@@ -19,6 +19,7 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
     public String getPublicUserInfo(String username) {
         Optional<User> user = repository.findByUsername(username);
@@ -64,5 +65,16 @@ public class UserService {
         // Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         repository.save(user);
+    }
+
+    public User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public Integer getCurrentUserId() {
+        return getCurrentUser().getId();
     }
 }
