@@ -98,10 +98,11 @@ public class PortfolioStockService
                 .orElseThrow(() -> new Exception("Portfolio stock not found"));
 
         String transactionType = quantity < portfolioStockModel.getQuantity() ? "SELL" : "BUY";
+        LocalDateTime today = LocalDate.now().atStartOfDay();
 
         PortfolioStockMetric portfolioStockMetric = portfolioStockMetricRepository
-                .findByPortfolioIdAndStockId(portfolioId, stock.getStockId())
-                .orElseThrow(() -> new Exception("Metrics not found"));
+                .findByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(), today)
+                .orElseThrow(() -> new Exception("Metrics not found for today"));
 
         Double oldQuantity = portfolioStockMetric.getQuantity();
         BigDecimal currentPrice = BigDecimal.valueOf(stock.getCurrentPrice());
@@ -118,9 +119,6 @@ public class PortfolioStockService
         }
         else
         {
-            avgCost = ((avgCost.multiply(BigDecimal.valueOf(oldQuantity)))
-                    .subtract(currentPrice.multiply(BigDecimal.valueOf(oldQuantity - quantity))))
-                    .divide(BigDecimal.valueOf(quantity), 2, BigDecimal.ROUND_HALF_UP);
         }
 
         totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
