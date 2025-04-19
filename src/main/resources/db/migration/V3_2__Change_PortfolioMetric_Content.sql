@@ -1,8 +1,8 @@
 -- Drop existing table first
-DROP TABLE IF EXISTS portfolio_metrics;
+DROP TABLE IF EXISTS portfoliometrics;
 
 -- Create the portfolio_metrics table with all required columns
-CREATE TABLE portfolio_metrics (
+CREATE TABLE portfoliometrics (
                                    portfolio_metrics_id SERIAL PRIMARY KEY,
                                    portfolio_id INTEGER NOT NULL,
                                    last_updated_date TIMESTAMP NOT NULL,
