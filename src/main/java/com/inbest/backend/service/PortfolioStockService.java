@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,10 +37,14 @@ public class PortfolioStockService
         this.stockRepository = stockRepository;
         this.portfolioStockMetricRepository = portfolioStockMetricRepository;
     }
-
     @Transactional
     public void addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
+            throw new Exception("Stock addition is not allowed on weekends");
+        }
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -83,6 +88,11 @@ public class PortfolioStockService
     @Transactional
     public void updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
+            throw new Exception("Quantity update is not allowed on weekends");
+        }
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -143,6 +153,11 @@ public class PortfolioStockService
     @Transactional
     public void removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
     {
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
+            throw new Exception("Stock deletion is not allowed on weekends");
+        }
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
