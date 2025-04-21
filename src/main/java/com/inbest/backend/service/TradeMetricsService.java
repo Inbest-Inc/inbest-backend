@@ -102,7 +102,7 @@ public class TradeMetricsService {
         }
 
         return worstTrades.stream()
-                .min(Comparator.comparing(TradeMetrics::getTotalReturn))
+                .min(Comparator.comparing(TradeMetrics::getTotalReturn).thenComparing(TradeMetrics::getExitDate, Comparator.reverseOrder()))
                 .orElseThrow();
     }
 

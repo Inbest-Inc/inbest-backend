@@ -25,14 +25,11 @@ public class TradeMetrics {
     @Column(name = "stock_id", nullable = false)
     private Integer stockId;
 
-    @Column(name = "entry_date", nullable = false)
-    private LocalDateTime entryDate;
-
     @Column(name = "exit_date")
     private LocalDateTime exitDate;
 
-    @Column(name = "entry_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal entryPrice;
+    @Column(name = "average_cost", nullable = false, precision = 10, scale = 2)
+    private BigDecimal averageCost;
 
     @Column(name = "exit_price", precision = 10, scale = 2)
     private BigDecimal exitPrice;

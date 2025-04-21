@@ -126,7 +126,7 @@ public class PortfolioStockService
             recordTradeOnSell(portfolioId, stock.getStockId(), oldQuantity - quantity,avgCost,BigDecimal.valueOf(stock.getCurrentPrice()));
         }
 
-        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
+        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).subtract(BigDecimal.valueOf(1));
 
         portfolioStockModel.setQuantity(quantity);
         portfolioStockRepository.save(portfolioStockModel);
@@ -201,13 +201,8 @@ public class PortfolioStockService
         }
     }
 
-    private void recordTradeOnSell(
-            Integer portfolioId,
-            Integer stockId,
-            Double sellQuantity,
-            BigDecimal averageCost,
-            BigDecimal currentPrice
-    ) {
+    private void recordTradeOnSell(Integer portfolioId, Integer stockId, Double sellQuantity, BigDecimal averageCost, BigDecimal currentPrice)
+    {
         BigDecimal totalCost = averageCost.multiply(BigDecimal.valueOf(sellQuantity));
         BigDecimal totalRevenue = currentPrice.multiply(BigDecimal.valueOf(sellQuantity));
 
@@ -222,9 +217,8 @@ public class PortfolioStockService
         TradeMetrics trade = TradeMetrics.builder()
                 .portfolioId(portfolioId)
                 .stockId(stockId)
-                .entryPrice(averageCost)
+                .averageCost(averageCost)
                 .exitPrice(currentPrice)
-                .entryDate(LocalDateTime.now())
                 .exitDate(LocalDateTime.now())
                 .quantity(sellQuantity.intValue())
                 .totalReturn(returnPercentage)
@@ -246,12 +240,20 @@ public class PortfolioStockService
             trade.setIsWorstTrade(false);
         }
 
+        Comparator<TradeMetrics> bestTradeComparator = Comparator
+                .comparing(TradeMetrics::getTotalReturn)
+                .thenComparing(TradeMetrics::getExitDate);
+
+        Comparator<TradeMetrics> worstTradeComparator = Comparator
+                .comparing(TradeMetrics::getTotalReturn)
+                .thenComparing(TradeMetrics::getExitDate, Comparator.reverseOrder());
+
         TradeMetrics bestTrade = trades.stream()
-                .max(Comparator.comparing(TradeMetrics::getTotalReturn))
+                .max(bestTradeComparator)
                 .orElse(null);
 
         TradeMetrics worstTrade = trades.stream()
-                .min(Comparator.comparing(TradeMetrics::getTotalReturn))
+                .min(worstTradeComparator)
                 .orElse(null);
 
         if (bestTrade != null) bestTrade.setIsBestTrade(true);
@@ -259,4 +261,5 @@ public class PortfolioStockService
 
         tradeMetricsRepository.saveAll(trades);
     }
+
 }
