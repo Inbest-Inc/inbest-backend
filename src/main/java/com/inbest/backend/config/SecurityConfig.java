@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/api/user/**",
                                 "/api/portfolio/list-by-username/**",
                                 "/api/portfolio/stock/metric/**",
+                                "/api/portfolio-metrics/**",
                                 "/api/s3/upload/**",
                                 "/api/posts/**"
                         ).permitAll()
