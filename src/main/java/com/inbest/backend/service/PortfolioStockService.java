@@ -3,20 +3,20 @@ package com.inbest.backend.service;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.PortfolioStockModel;
 import com.inbest.backend.model.Stock;
+import com.inbest.backend.model.TradeMetrics;
 import com.inbest.backend.model.position.PortfolioStockMetric;
 import com.inbest.backend.model.response.PortfolioStockResponse;
-import com.inbest.backend.repository.PortfolioRepository;
-import com.inbest.backend.repository.PortfolioStockMetricRepository;
-import com.inbest.backend.repository.PortfolioStockRepository;
-import com.inbest.backend.repository.StockRepository;
+import com.inbest.backend.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,13 +28,17 @@ public class PortfolioStockService
     private final PortfolioRepository portfolioRepository;
     private final StockRepository stockRepository;
     private final PortfolioStockMetricRepository portfolioStockMetricRepository;
+    private final TradeMetricsRepository tradeMetricsRepository;
 
-    public PortfolioStockService(PortfolioStockRepository portfolioStockRepository, PortfolioRepository portfolioRepository, StockRepository stockRepository, PortfolioStockMetricRepository portfolioStockMetricRepository)
+
+
+    public PortfolioStockService(PortfolioStockRepository portfolioStockRepository, PortfolioRepository portfolioRepository, StockRepository stockRepository, PortfolioStockMetricRepository portfolioStockMetricRepository, TradeMetricsRepository tradeMetricsRepository)
     {
         this.portfolioStockRepository = portfolioStockRepository;
         this.portfolioRepository = portfolioRepository;
         this.stockRepository = stockRepository;
         this.portfolioStockMetricRepository = portfolioStockMetricRepository;
+        this.tradeMetricsRepository = tradeMetricsRepository;
     }
 
     @Transactional
@@ -83,6 +87,7 @@ public class PortfolioStockService
     @Transactional
     public void updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -118,12 +123,10 @@ public class PortfolioStockService
         }
         else
         {
-            avgCost = ((avgCost.multiply(BigDecimal.valueOf(oldQuantity)))
-                    .subtract(currentPrice.multiply(BigDecimal.valueOf(oldQuantity - quantity))))
-                    .divide(BigDecimal.valueOf(quantity), 2, BigDecimal.ROUND_HALF_UP);
+            recordTradeOnSell(portfolioId, stock.getStockId(), oldQuantity - quantity,avgCost,BigDecimal.valueOf(stock.getCurrentPrice()));
         }
 
-        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
+        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).subtract(BigDecimal.valueOf(1));
 
         portfolioStockModel.setQuantity(quantity);
         portfolioStockRepository.save(portfolioStockModel);
@@ -138,6 +141,7 @@ public class PortfolioStockService
         portfolioStockMetricRepository.save(portfolioStockMetric);
 
         recalculatePositionWeights(portfolioId);
+
     }
 
     @Transactional
@@ -153,6 +157,12 @@ public class PortfolioStockService
             throw new Exception("You do not have portfolio or stock");
         }
 
+        PortfolioStockMetric portfolioStockMetric = portfolioStockMetricRepository
+                .findByPortfolioIdAndStockId(portfolioId, stock.getStockId())
+                .orElseThrow(() -> new Exception("Metrics not found"));
+        BigDecimal avgCost = portfolioStockMetric.getAverageCost();
+
+        recordTradeOnSell(portfolioId, stock.getStockId(), portfolioStockMetric.getQuantity(),avgCost,BigDecimal.valueOf(stock.getCurrentPrice()));
         portfolioStockRepository.deleteByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId());
         portfolioStockMetricRepository.deleteByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(), LocalDate.now().atStartOfDay());
 
@@ -189,6 +199,67 @@ public class PortfolioStockService
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
+    }
+
+    private void recordTradeOnSell(Integer portfolioId, Integer stockId, Double sellQuantity, BigDecimal averageCost, BigDecimal currentPrice)
+    {
+        BigDecimal totalCost = averageCost.multiply(BigDecimal.valueOf(sellQuantity));
+        BigDecimal totalRevenue = currentPrice.multiply(BigDecimal.valueOf(sellQuantity));
+
+        BigDecimal returnPercentage = BigDecimal.ZERO;
+
+        if (totalCost.compareTo(BigDecimal.ZERO) > 0) {
+            returnPercentage = totalRevenue.subtract(totalCost)
+                    .divide(totalCost, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+        }
+
+        TradeMetrics trade = TradeMetrics.builder()
+                .portfolioId(portfolioId)
+                .stockId(stockId)
+                .averageCost(averageCost)
+                .exitPrice(currentPrice)
+                .exitDate(LocalDateTime.now())
+                .quantity(sellQuantity.intValue())
+                .totalReturn(returnPercentage)
+                .isBestTrade(false)
+                .isWorstTrade(false)
+                .build();
+
+        tradeMetricsRepository.save(trade);
+        updateBestAndWorstTrade(portfolioId);
+    }
+
+    public void updateBestAndWorstTrade(Integer portfolioId) {
+        List<TradeMetrics> trades = tradeMetricsRepository.findByPortfolioId(portfolioId);
+
+        if (trades.isEmpty()) return;
+
+        for (TradeMetrics trade : trades) {
+            trade.setIsBestTrade(false);
+            trade.setIsWorstTrade(false);
+        }
+
+        Comparator<TradeMetrics> bestTradeComparator = Comparator
+                .comparing(TradeMetrics::getTotalReturn)
+                .thenComparing(TradeMetrics::getExitDate);
+
+        Comparator<TradeMetrics> worstTradeComparator = Comparator
+                .comparing(TradeMetrics::getTotalReturn)
+                .thenComparing(TradeMetrics::getExitDate, Comparator.reverseOrder());
+
+        TradeMetrics bestTrade = trades.stream()
+                .max(bestTradeComparator)
+                .orElse(null);
+
+        TradeMetrics worstTrade = trades.stream()
+                .min(worstTradeComparator)
+                .orElse(null);
+
+        if (bestTrade != null) bestTrade.setIsBestTrade(true);
+        if (worstTrade != null) worstTrade.setIsWorstTrade(true);
+
+        tradeMetricsRepository.saveAll(trades);
     }
 
 }
