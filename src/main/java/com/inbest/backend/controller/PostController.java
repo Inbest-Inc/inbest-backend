@@ -24,7 +24,14 @@ public class PostController {
     @PostMapping
     public ResponseEntity<?> createPost(@Valid @RequestBody PostCreateDTO postDTO) {
         try {
-            return ResponseEntity.ok(postService.createPost(postDTO));
+            PostResponseDTO createdPost = postService.createPost(postDTO);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Post created successfully");
+            response.put("post", createdPost);
+
+            return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
@@ -38,11 +45,15 @@ public class PostController {
         try {
             List<PostResponseDTO> allPosts = postService.getAllPosts();
             if (allPosts.isEmpty()) {
-                return ResponseEntity.status(404).body(Map.of(
-                        "status", "error",
-                        "message", "Posts not found"));
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "User do not have any posts"));
             }
-            return ResponseEntity.ok(allPosts);
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Posts found!",
+                    "data",allPosts
+            ));
         } catch (DataAccessException e) {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
@@ -51,12 +62,42 @@ public class PostController {
         }
     }
 
+    @GetMapping("/followed")
+    public ResponseEntity<?> getFollowedUsersPosts() {
+        try {
+            List<PostResponseDTO> followedPosts = postService.getPostsFromFollowedUsers();
+            
+            if (followedPosts.isEmpty()) {
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "No posts found from followed users"
+                ));
+            }
+            
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Posts from followed users fetched successfully",
+                    "data", followedPosts
+            ));
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "An error occurred while fetching posts from followed users");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    
     @GetMapping("/{id}")
     public ResponseEntity<?> getPostById(@PathVariable Long id) {
         try {
             Optional<PostResponseDTO> post = postService.getPostById(id);
             if (post.isPresent()) {
-                return ResponseEntity.ok(post.get());
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "Posts found!",
+                        "data",post.get()
+                ));
             }
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
@@ -78,7 +119,11 @@ public class PostController {
                         "status", "error",
                         "message", "No posts found for user: " + username));
             }
-            return ResponseEntity.ok(posts);
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Posts found!",
+                    "data",posts
+            ));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
@@ -109,4 +154,17 @@ public class PostController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+
+    @GetMapping("/trending")
+    public ResponseEntity<?> getTrendingPosts() {
+        List<PostResponseDTO> trendingPosts = postService.getTrendingPosts();
+
+        return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Trending posts fetched successfully",
+                "data", trendingPosts
+        ));
+    }
+
 }
