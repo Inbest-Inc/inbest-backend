@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.dto.FollowDTO;
 import com.inbest.backend.model.Follow;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.FollowRepository;
@@ -56,23 +57,29 @@ public class FollowService
         followRepository.deleteByFollowerAndFollowing(follower, following);
     }
 
-    public List<User> getFollowing(String username)
+    public List<FollowDTO> getFollowing(String username)
     {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.findByFollower(user)
                 .stream()
-                .map(Follow::getFollowing)
+                .map(follow -> new FollowDTO(
+                    follow.getFollowing().getUsername(),
+                    follow.getFollowing().getImageUrl()
+                ))
                 .collect(Collectors.toList());
     }
 
-    public List<User> getFollowers(String username)
+    public List<FollowDTO> getFollowers(String username)
     {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.findByFollowing(user)
                 .stream()
-                .map(Follow::getFollower)
+                .map(follow -> new FollowDTO(
+                    follow.getFollower().getUsername(),
+                    follow.getFollower().getImageUrl()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -83,13 +90,12 @@ public class FollowService
         return followRepository.countByFollowing(user);
     }
 
-    //maybe for future
-    /*public Long getFollowingCount(Long userId)
+    public Long getFollowingCount(String username)
     {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return followRepository.countByFollower(user);
-    }*/
+    }
 
     public boolean isFollowing(String followerName, String followingName)
     {
