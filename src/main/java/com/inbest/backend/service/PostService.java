@@ -1,8 +1,6 @@
 package com.inbest.backend.service;
 
-import com.inbest.backend.dto.PostCreateDTO;
-import com.inbest.backend.dto.PostResponseDTO;
-import com.inbest.backend.dto.FollowDTO;
+import com.inbest.backend.dto.*;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.InvestmentActivity;
 import com.inbest.backend.model.Post;
@@ -139,26 +137,53 @@ public void updateAllPostScores() {
     public List<PostResponseDTO> getCurrentUserPosts() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-                
+
         return postRepository.findByUserOrderByCreatedAtDesc(user).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
+
     private PostResponseDTO convertToDTO(Post post) {
+        User user = post.getUser();
+        InvestmentActivity activity = post.getInvestmentActivity();
+
+        UserDTO userDTO = UserDTO.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .image_url(user.getImageUrl())
+                .build();
+
+
+        InvestmentActivityResponseDTO activityDTO = InvestmentActivityResponseDTO.builder()
+                .activityId(activity.getActivityId())
+                .portfolioId(activity.getPortfolio().getPortfolioId())
+                .stockId(activity.getStock().getStockId())
+                .stockSymbol(activity.getStock().getTickerSymbol())
+                .stockName(activity.getStock().getStockName())
+                .actionType(activity.getActionType().name())
+                .stockQuantity(activity.getStockQuantity())
+                .date(activity.getDate())
+                .old_position_weight(activity.getOldPositionWeight())
+                .new_position_weight(activity.getNewPositionWeight())
+                .build();
+
+
         PostResponseDTO dto = new PostResponseDTO();
         dto.setId(post.getId());
         dto.setContent(post.getContent());
         dto.setCreatedAt(post.getCreatedAt());
-        dto.setUsername(post.getUser().getUsername());
-        dto.setStockSymbol(post.getInvestmentActivity().getStock().getTickerSymbol());
-        dto.setActionType(post.getInvestmentActivity().getActionType().name());
+        dto.setStockSymbol(activity.getStock().getTickerSymbol());
         dto.setLikeCount(post.getLikeCount());
         dto.setCommentCount(post.getCommentCount());
         dto.setTrending(post.getIsTrending());
+        dto.setUserDTO(userDTO);
+        dto.setInvestmentActivityResponseDTO(activityDTO);
         return dto;
     }
 }
