@@ -14,4 +14,6 @@ public interface InvestmentActivityRepository extends JpaRepository<InvestmentAc
     List<InvestmentActivity> findByPortfolio_PortfolioId(Integer portfolioId);
     List<InvestmentActivity> findByStock_StockId(Long stockId);
     Optional<InvestmentActivity> findByActivityId(Long activityId);
+    Optional<InvestmentActivity> findTopByPortfolio_PortfolioIdAndStock_StockIdAndActionTypeOrderByDateDesc(
+            Integer portfolioId, Integer stockId, InvestmentActivity.ActionType actionType);
 } 

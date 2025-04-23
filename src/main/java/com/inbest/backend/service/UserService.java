@@ -20,6 +20,7 @@ public class UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
+
     public String getPublicUserInfo(String username) {
         Optional<User> user = repository.findByUsername(username);
         return user.map(value -> value.getName() + " " + value.getSurname()).orElse("John Doe");
@@ -68,5 +69,15 @@ public class UserService {
 
     public List<User> searchUsers(String searchTerm) {
         return repository.searchUsers(searchTerm);
+    }
+    public User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public Integer getCurrentUserId() {
+        return getCurrentUser().getId();
     }
 }

@@ -14,10 +14,10 @@ public class PostResponseDTO {
     private String content;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String username;
     private String stockSymbol;
-    private String actionType;
     private int likeCount;
     private int commentCount;
     private boolean isTrending;
+    private UserDTO userDTO;
+    private InvestmentActivityResponseDTO investmentActivityResponseDTO;
 }
