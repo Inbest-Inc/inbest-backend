@@ -14,11 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -37,13 +36,11 @@ public class PortfolioStockService
         this.stockRepository = stockRepository;
         this.portfolioStockMetricRepository = portfolioStockMetricRepository;
     }
+
     @Transactional
     public void addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
-        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
-            throw new Exception("Stock addition is not allowed on weekends");
-        }
+        validateMarketOpenOrThrow();
 
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -55,7 +52,8 @@ public class PortfolioStockService
             throw new Exception("Stock is already added to the portfolio");
         }
 
-        if (quantity <= 0) {
+        if (quantity <= 0)
+        {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
 
@@ -88,10 +86,7 @@ public class PortfolioStockService
     @Transactional
     public void updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
-        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
-            throw new Exception("Quantity update is not allowed on weekends");
-        }
+        validateMarketOpenOrThrow();
 
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -153,10 +148,7 @@ public class PortfolioStockService
     @Transactional
     public void removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
     {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
-        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
-            throw new Exception("Stock deletion is not allowed on weekends");
-        }
+        validateMarketOpenOrThrow();
 
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -175,10 +167,12 @@ public class PortfolioStockService
     }
 
     @Transactional
-    public void recalculatePositionWeights(Integer portfolioId) throws Exception {
+    public void recalculatePositionWeights(Integer portfolioId) throws Exception
+    {
         LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
 
-        if (latestDate == null) {
+        if (latestDate == null)
+        {
             throw new Exception("No records found for the portfolio");
         }
 
@@ -190,15 +184,18 @@ public class PortfolioStockService
                 .map(metric -> metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalWeightedValue.compareTo(BigDecimal.ZERO) == 0) {
-            for (PortfolioStockMetric metric : metrics) {
+        if (totalWeightedValue.compareTo(BigDecimal.ZERO) == 0)
+        {
+            for (PortfolioStockMetric metric : metrics)
+            {
                 metric.setPositionWeight(BigDecimal.ZERO);
                 portfolioStockMetricRepository.save(metric);
             }
             return;
         }
 
-        for (PortfolioStockMetric metric : metrics) {
+        for (PortfolioStockMetric metric : metrics)
+        {
             BigDecimal weightedValue = metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity()));
             BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, 2, BigDecimal.ROUND_HALF_UP);
             metric.setPositionWeight(positionWeight);
@@ -206,4 +203,40 @@ public class PortfolioStockService
         }
     }
 
+    public static Map<String, String> validateStockMarket()
+    {
+        Map<String, String> response = new HashMap<>();
+
+        ZonedDateTime nowEastern = ZonedDateTime.now(ZoneId.of("America/New_York"));
+        DayOfWeek today = nowEastern.getDayOfWeek();
+        LocalTime nowTime = nowEastern.toLocalTime();
+
+        LocalTime marketOpen = LocalTime.of(9, 30);
+        LocalTime marketClose = LocalTime.of(16, 0);
+
+        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY)
+        {
+            response.put("status", "error");
+            response.put("message", "Stock addition is not allowed on weekends");
+            return response;
+        }
+
+        if (nowTime.isBefore(marketOpen) || nowTime.isAfter(marketClose))
+        {
+            response.put("status", "error");
+            response.put("message", "Stock addition is only allowed during US market hours (9:30 AM to 4:00 PM ET)");
+            return response;
+        }
+
+        response.put("status", "success");
+        response.put("message", "Stock addition is allowed");
+        return response;
+    }
+
+    private void validateMarketOpenOrThrow() throws Exception {
+        Map<String, String> marketValidation = validateStockMarket();
+        if ("error".equals(marketValidation.get("status"))) {
+            throw new Exception(marketValidation.get("message"));
+        }
+    }
 }
