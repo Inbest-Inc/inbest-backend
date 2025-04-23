@@ -83,7 +83,6 @@ public class PostService {
         dto.setUsername(post.getUser().getUsername());
         dto.setStockSymbol(post.getInvestmentActivity().getStock().getTickerSymbol());
         dto.setActionType(post.getInvestmentActivity().getActionType().name());
-        dto.setAmount(post.getInvestmentActivity().getAmount());
         dto.setLikeCount(post.getLikeCount());
         dto.setTrending(post.getIsTrending());
         return dto;

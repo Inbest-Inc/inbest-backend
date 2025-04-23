@@ -17,7 +17,8 @@ public class InvestmentActivityResponseDTO {
     private String stockSymbol;
     private String stockName;
     private String actionType;
-    private BigDecimal amount;
     private Double stockQuantity;
     private LocalDateTime date;
+    private BigDecimal old_position_weight;
+    private BigDecimal new_position_weight;
 } 

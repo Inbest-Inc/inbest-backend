@@ -21,10 +21,6 @@ public class InvestmentActivityCreateDTO {
     @NotNull(message = "Action type cannot be null")
     private String actionType;
 
-    @NotNull(message = "Amount cannot be null")
-    @Positive(message = "Amount must be positive")
-    private BigDecimal amount;
-
     @NotNull(message = "Stock quantity cannot be null")
     @Positive(message = "Stock quantity must be positive")
     private Double stockQuantity;

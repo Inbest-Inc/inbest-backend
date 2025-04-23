@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.dto.InvestmentActivityResponseDTO;
 import com.inbest.backend.model.InvestmentActivity;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.PortfolioStockModel;
@@ -39,7 +40,7 @@ public class PortfolioStockService
     }
 
 
-    public void addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
+    public InvestmentActivityResponseDTO addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -66,7 +67,6 @@ public class PortfolioStockService
        activity.setStock(stock);
        activity.setStockQuantity(quantity);
        activity.setDate(LocalDateTime.now());
-       activity.setAmount(BigDecimal.valueOf(quantity * stock.getCurrentPrice()));
        activity.setActionType(InvestmentActivity.ActionType.ADD);
        activity.setOldPositionWeight(BigDecimal.ZERO);
 
@@ -93,10 +93,11 @@ public class PortfolioStockService
         recalculatePositionWeights(portfolioId);
         activity.setNewPositionWeight(portfolioStockMetricNew.getPositionWeight());
         investmentActivityRepository.save(activity);
+        return convertToResponseDTO(activity);
     }
 
     @Transactional
-    public void updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
+    public InvestmentActivityResponseDTO updateQuantity(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
@@ -135,7 +136,6 @@ public class PortfolioStockService
             activity.setStock(stock);
             activity.setStockQuantity(quantity-oldQuantity);
             activity.setDate(LocalDateTime.now());
-            activity.setAmount(BigDecimal.valueOf(quantity * stock.getCurrentPrice()));
             activity.setActionType(InvestmentActivity.ActionType.BUY);
             activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
         }
@@ -145,7 +145,6 @@ public class PortfolioStockService
             activity.setStock(stock);
             activity.setStockQuantity(oldQuantity-quantity);
             activity.setDate(LocalDateTime.now());
-            activity.setAmount(BigDecimal.valueOf(quantity * stock.getCurrentPrice()));
             activity.setActionType(InvestmentActivity.ActionType.SELL);
             activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
         }
@@ -167,11 +166,12 @@ public class PortfolioStockService
         recalculatePositionWeights(portfolioId);
         activity.setNewPositionWeight(portfolioStockMetric.getPositionWeight());
         investmentActivityRepository.save(activity);
+        return convertToResponseDTO(activity);
 
     }
 
     @Transactional
-    public void removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
+    public InvestmentActivityResponseDTO removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
     {
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -190,7 +190,7 @@ public class PortfolioStockService
         activity.setPortfolio(portfolio);
         activity.setStockQuantity(portfolioStock.getQuantity());
         activity.setDate(LocalDateTime.now());
-        activity.setAmount(BigDecimal.valueOf(portfolioStock.getQuantity() * stock.getCurrentPrice()));
+        activity.setActionType(InvestmentActivity.ActionType.SELL);
         activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
         activity.setNewPositionWeight(BigDecimal.ZERO);
 
@@ -199,6 +199,7 @@ public class PortfolioStockService
         portfolioStockMetricRepository.deleteByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(), LocalDate.now().atStartOfDay());
 
         recalculatePositionWeights(portfolioId);
+        return convertToResponseDTO(activity);
     }
 
     @Transactional
@@ -231,6 +232,20 @@ public class PortfolioStockService
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
+    }
+    private InvestmentActivityResponseDTO convertToResponseDTO(InvestmentActivity activity) {
+        return new InvestmentActivityResponseDTO(
+                activity.getActivityId(),
+                activity.getPortfolio().getPortfolioId(),
+                activity.getStock().getStockId(),
+                activity.getStock().getTickerSymbol(),
+                activity.getStock().getStockName(),
+                activity.getActionType().name(),
+                activity.getStockQuantity(),
+                activity.getDate(),
+                activity.getOldPositionWeight(),
+                activity.getNewPositionWeight()
+        );
     }
 
 }

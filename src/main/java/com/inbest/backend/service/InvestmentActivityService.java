@@ -37,7 +37,6 @@ public class InvestmentActivityService {
         activity.setPortfolio(portfolio);
         activity.setStock(stock);
         activity.setActionType(InvestmentActivity.ActionType.valueOf(dto.getActionType()));
-        activity.setAmount(dto.getAmount());
         activity.setStockQuantity(dto.getStockQuantity());
         activity.setDate(LocalDateTime.now());
 
@@ -81,7 +80,6 @@ public class InvestmentActivityService {
         dto.setStockSymbol(activity.getStock().getTickerSymbol());
         dto.setStockName(activity.getStock().getStockName());
         dto.setActionType(activity.getActionType().toString());
-        dto.setAmount(activity.getAmount());
         dto.setStockQuantity(activity.getStockQuantity());
         dto.setDate(activity.getDate());
         return dto;
