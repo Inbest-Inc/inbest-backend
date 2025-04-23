@@ -3,10 +3,8 @@ package com.inbest.backend.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,6 +53,12 @@ public class Post
 
     @Column(name = "like_count", nullable = false)
     private int likeCount = 0;
+
+    @Column(name = "comment_count", nullable = false)
+    private int commentCount = 0;
+
+    @Column(name = "trend_score", nullable = false)
+    private double trendScore = 0.0;
 
     @Column(name = "is_trending")
     private Boolean isTrending = false;

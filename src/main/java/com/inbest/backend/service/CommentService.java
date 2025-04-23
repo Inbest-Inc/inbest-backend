@@ -49,6 +49,8 @@ public class CommentService
         comment.setPost(post);
         comment.setCreatedDate(LocalDateTime.now());
 
+        post.setCommentCount(post.getCommentCount() + 1);
+
         return commentRepository.save(comment);
     }
 
@@ -77,6 +79,12 @@ public class CommentService
         {
             throw new SecurityException("You can only delete your own comment!");
         }
+        
+        // Decrease post's comment count
+        Post post = comment.getPost();
+        post.setCommentCount(post.getCommentCount() - 1);
+        postRepository.save(post);
+        
         commentRepository.delete(comment);
     }
 }
