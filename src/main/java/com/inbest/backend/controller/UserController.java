@@ -39,6 +39,7 @@ public class UserController
                     return ResponseEntity.status(404).body(errorResponse);
                 }
                 Long followerCount = followService.getFollowerCount(username);
+                Long followingCount = followService.getFollowingCount(username);
                 String imageUrl = user.get().getImageUrl();
                 String fullName = userService.getPublicUserInfo(username);
 
@@ -47,6 +48,7 @@ public class UserController
                 response.put("message", "User information fetched successfully");
                 response.put("fullName", fullName);
                 response.put("followerCount", followerCount);
+                response.put("followingCount", followingCount);
                 response.put("imageUrl", imageUrl);
 
                 if (authentication != null && authentication.isAuthenticated())

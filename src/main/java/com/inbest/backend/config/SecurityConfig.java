@@ -44,7 +44,11 @@ public class SecurityConfig {
                                 "/api/portfolio-metrics/**",
                                 "/api/s3/upload/**",
                                 "/api/posts/**",
-                                "/api/portfolios/best/**"
+                                "/api/portfolios/best/**",
+                                "/api/follow/*/followers/**",
+                                "/api/follow/*/following/**"
+
+
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()

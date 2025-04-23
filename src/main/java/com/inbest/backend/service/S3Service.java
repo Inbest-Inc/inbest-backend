@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -61,7 +62,6 @@ public class S3Service implements FileService
     public FileUploadResponseDTO uploadFile(MultipartFile multipartFile)
     {
         int userId = authenticationService.authenticate_user();
-        String filePath;
 
         Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/jpg", "image/gif", "image/webp");
         Set<String> allowedExtensions = Set.of("jpeg", "jpg", "png", "gif", "webp");
@@ -77,12 +77,12 @@ public class S3Service implements FileService
             String contentType = multipartFile.getContentType();
             if (!allowedTypes.contains(contentType))
             {
-                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG and JPG are allowed.", null, null);
+                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG, GIF, WEBP are allowed.", null, null);
             }
 
             if (multipartFile.getSize() > maxSize)
             {
-                return new FileUploadResponseDTO("error", "File size exceeds the maximum limit of 5MB.", null, null);
+                return new FileUploadResponseDTO("error", "File size exceeds the 5 MB limit.", null, null);
             }
 
             String originalFilename = multipartFile.getOriginalFilename();
@@ -94,17 +94,19 @@ public class S3Service implements FileService
             String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
             if (!allowedExtensions.contains(extension))
             {
-                return new FileUploadResponseDTO("error", "Invalid file extension. Only .jpeg and .png files are allowed.", null, null);
+                return new FileUploadResponseDTO("error", "Invalid file extension.", null, null);
             }
 
-            filePath = userId + "." + extension;
+            String filePath = userId + "." + extension;
 
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentType(contentType);
-            objectMetadata.setContentLength(multipartFile.getSize());
-            objectMetadata.setCacheControl("no-cache, no-store, must-revalidate");
+            deleteExistingImage(userId);
 
-            s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), objectMetadata);
+            ObjectMetadata meta = new ObjectMetadata();
+            meta.setContentType(contentType);
+            meta.setContentLength(multipartFile.getSize());
+            meta.setCacheControl("no-cache, no-store, must-revalidate");
+
+            s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), meta);
 
             String username = userRepository.findById((long) userId)
                     .map(User::getUsername)
@@ -121,16 +123,16 @@ public class S3Service implements FileService
         }
         catch (IOException e)
         {
-            log.error("IOException occurred: {}", e.getMessage());
-            return new FileUploadResponseDTO("error", "Error occurred during file upload: " + e.getMessage(), null, null);
+            log.error("IOException during upload: {}", e.getMessage());
+            return new FileUploadResponseDTO("error", "Error during file upload: " + e.getMessage(), null, null);
         }
         catch (Exception e)
         {
-            log.error("Error occurred during file upload: {}", e.getMessage());
-            return new FileUploadResponseDTO("error", "Unexpected error occurred during file upload: " + e.getMessage(), null, null);
+            log.error("Unexpected error during upload: {}", e.getMessage());
+            return new FileUploadResponseDTO("error", "Unexpected error: " + e.getMessage(), null, null);
         }
-    }
 
+    }
 
 
     @Override
@@ -175,24 +177,41 @@ public class S3Service implements FileService
 
     public String getImageUrl(String username) throws FileNotFoundException
     {
-            int userId = userRepository.findByUsername(username)
-                    .map(User::getId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
+        int userId = userRepository.findByUsername(username)
+                .map(User::getId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
 
-            ListObjectsV2Request request = new ListObjectsV2Request()
-                    .withBucketName(bucketName)
-                    .withPrefix(userId + ".")
-                    .withMaxKeys(1);
+        ListObjectsV2Request request = new ListObjectsV2Request()
+                .withBucketName(bucketName)
+                .withPrefix(userId + ".")
+                .withMaxKeys(1);
 
-            ListObjectsV2Result result = s3Client.listObjectsV2(request);
+        ListObjectsV2Result result = s3Client.listObjectsV2(request);
 
-            if (!result.getObjectSummaries().isEmpty())
-            {
-                String filePath = result.getObjectSummaries().get(0).getKey();
-                String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
+        if (!result.getObjectSummaries().isEmpty())
+        {
+            String filePath = result.getObjectSummaries().get(0).getKey();
+            String imageUrl = s3Client.getUrl(bucketName, filePath).toString();
 
-                return imageUrl + "?t=" + System.currentTimeMillis();
-            }
-            return null;
+            return imageUrl + "?t=" + System.currentTimeMillis();
+        }
+        return null;
+    }
+
+    private void deleteExistingImage(int userId)
+    {
+        ListObjectsV2Result objects =
+                s3Client.listObjectsV2(bucketName, userId + ".");
+        List<S3ObjectSummary> summaries = objects.getObjectSummaries();
+
+        if (!summaries.isEmpty())
+        {
+            DeleteObjectsRequest deleteReq = new DeleteObjectsRequest(bucketName)
+                    .withKeys(
+                            summaries.stream()
+                                    .map(S3ObjectSummary::getKey)
+                                    .toArray(String[]::new));
+            s3Client.deleteObjects(deleteReq);
+        }
     }
 }
