@@ -74,5 +74,6 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
     List<PortfolioStockMetric> findByPortfolioIdAndDate(@Param("portfolioId") Integer portfolioId, @Param("date") LocalDateTime date);
 
     void deleteByPortfolioIdAndStockIdAndDate(Integer portfolioId, Integer stockId, LocalDateTime date);
+    Optional<PortfolioStockMetric> findTopByPortfolioIdAndStockIdOrderByDateDesc(Integer portfolioId, Integer stockId);
 
 }
