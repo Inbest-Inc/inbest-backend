@@ -1,6 +1,7 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.dto.PortfolioDTO;
+import com.inbest.backend.model.position.PortfolioMetric;
 import com.inbest.backend.model.response.PortfolioGetResponse;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
@@ -12,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -51,6 +53,21 @@ public class PortfolioService
         portfolio.setLastUpdatedDate(now);
         portfolio.setUser(user);
         Portfolio insertedPortfolio = portfolioRepository.save(portfolio);
+
+        PortfolioMetric portfolioMetric = new PortfolioMetric();
+        portfolioMetric.setPortfolioId(portfolio.getPortfolioId());
+        portfolioMetric.setPortfolio(insertedPortfolio);
+        portfolioMetric.setBeta(BigDecimal.ZERO);
+        portfolioMetric.setLastUpdatedDate(now);
+        portfolioMetric.setSharpeRatio(BigDecimal.ZERO);
+        portfolioMetric.setVolatility(BigDecimal.ZERO);
+        portfolioMetric.setPortfolioValue(BigDecimal.ZERO);
+        portfolioMetric.setDailyReturn(BigDecimal.ZERO);
+        portfolioMetric.setHourlyReturn(BigDecimal.ZERO);
+        portfolioMetric.setMonthlyReturn(BigDecimal.ZERO);
+        portfolioMetric.setTotalReturn(BigDecimal.ZERO);
+        portfolioMetric.setRiskScore(BigDecimal.ZERO);
+        portfolioMetric.setRiskCategory("Conservative");
         return insertedPortfolio.getPortfolioId();
     }
 
