@@ -136,7 +136,17 @@ public void updateAllPostScores() {
                 .collect(Collectors.toList());
     }
 
-  
+    public List<PostResponseDTO> getCurrentUserPosts() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                
+        return postRepository.findByUserOrderByCreatedAtDesc(user).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
     private PostResponseDTO convertToDTO(Post post) {
         PostResponseDTO dto = new PostResponseDTO();

@@ -167,4 +167,27 @@ public class PostController {
         ));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUserPosts() {
+        try {
+            List<PostResponseDTO> userPosts = postService.getCurrentUserPosts();
+            if (userPosts.isEmpty()) {
+                return ResponseEntity.status(200).body(Map.of(
+                        "status", "success",
+                        "message", "You don't have any posts yet"
+                ));
+            }
+            return ResponseEntity.status(200).body(Map.of(
+                    "status", "success",
+                    "message", "Your posts fetched successfully",
+                    "data", userPosts
+            ));
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "An error occurred while fetching your posts");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 }
