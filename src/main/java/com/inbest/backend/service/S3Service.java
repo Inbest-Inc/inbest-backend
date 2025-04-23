@@ -103,10 +103,21 @@ public class S3Service implements FileService
             objectMetadata.setContentType(contentType);
             objectMetadata.setContentLength(multipartFile.getSize());
             objectMetadata.setCacheControl("no-cache, no-store, must-revalidate");
+
             s3Client.putObject(bucketName, filePath, multipartFile.getInputStream(), objectMetadata);
 
-            return new FileUploadResponseDTO("success", "File uploaded successfully", filePath, LocalDateTime.now());
+            String username = userRepository.findById((long) userId)
+                    .map(User::getUsername)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
+            String imageUrl = getImageUrl(username);
+
+            User user = userRepository.findById((long) userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+            user.setImageUrl(imageUrl);
+            userRepository.save(user);
+
+            return new FileUploadResponseDTO("success", "File uploaded successfully", imageUrl, LocalDateTime.now());
         }
         catch (IOException e)
         {
@@ -119,6 +130,7 @@ public class S3Service implements FileService
             return new FileUploadResponseDTO("error", "Unexpected error occurred during file upload: " + e.getMessage(), null, null);
         }
     }
+
 
 
     @Override

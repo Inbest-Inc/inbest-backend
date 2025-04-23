@@ -42,6 +42,9 @@ public class User implements UserDetails
     @Column(nullable = false, length = 50)
     private String surname;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'USER'")
     private Role role;
@@ -57,6 +60,7 @@ public class User implements UserDetails
     {
         return passwordHash;
     }
+
 
     @Override
     public String getUsername()
