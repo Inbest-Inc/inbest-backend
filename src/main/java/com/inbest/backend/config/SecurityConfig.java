@@ -43,7 +43,8 @@ public class SecurityConfig {
                                 "/api/portfolio/stock/metric/**",
                                 "/api/portfolio-metrics/**",
                                 "/api/s3/upload/**",
-                                "/api/posts/**"
+                                "/api/posts/**",
+                                "/api/portfolios/best/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
