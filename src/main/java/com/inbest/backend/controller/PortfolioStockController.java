@@ -1,5 +1,6 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.dto.InvestmentActivityResponseDTO;
 import com.inbest.backend.model.PortfolioStockModel;
 import com.inbest.backend.model.response.PortfolioStockResponse;
 import com.inbest.backend.service.AuthenticationService;
@@ -36,8 +37,12 @@ public class PortfolioStockController
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
             }
-            portfolioStockService.addStockToPortfolio(portfolioId, tickerName, quantity);
-            return new ResponseEntity<>(HttpStatus.OK);
+            InvestmentActivityResponseDTO responseDTO = portfolioStockService.addStockToPortfolio(portfolioId, tickerName, quantity);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", responseDTO);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e)
         {
@@ -62,11 +67,12 @@ public class PortfolioStockController
             {
                 throw new IllegalArgumentException("Quantity must be greater than zero");
             }
-            portfolioStockService.updateQuantity(portfolioId, tickerName, quantity);
-            return new ResponseEntity<>(new HashMap<String, String>()
-            {{
-                put("status", "success");
-            }}, HttpStatus.OK);
+            InvestmentActivityResponseDTO investmentActivityResponseDTO = portfolioStockService.updateQuantity(portfolioId, tickerName, quantity);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", investmentActivityResponseDTO);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e)
         {
@@ -86,8 +92,12 @@ public class PortfolioStockController
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Map.of("error", "Access denied", "message", "You do not have access to this portfolio."));
             }
-            portfolioStockService.removeStockFromPortfolio(portfolioId, tickerName);
-            return ResponseEntity.ok(Map.of("status", "success"));
+            InvestmentActivityResponseDTO investmentActivityResponseDTO =portfolioStockService.removeStockFromPortfolio(portfolioId, tickerName);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("data", investmentActivityResponseDTO);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e)
         {

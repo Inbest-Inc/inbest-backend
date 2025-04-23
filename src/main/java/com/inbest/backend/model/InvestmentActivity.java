@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -34,11 +35,14 @@ public class InvestmentActivity {
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
-
     @Column(name = "stock_quantity", nullable = false)
     private Double stockQuantity;
+
+    @Column(name = "old_position_weight")
+    private BigDecimal oldPositionWeight;
+
+    @Column(name="new_position_weight")
+    private BigDecimal newPositionWeight;
 
     public enum ActionType {
         BUY,

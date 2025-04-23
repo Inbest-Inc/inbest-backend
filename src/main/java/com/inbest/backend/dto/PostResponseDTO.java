@@ -18,7 +18,6 @@ public class PostResponseDTO {
     private String username;
     private String stockSymbol;
     private String actionType;
-    private BigDecimal amount;
     private int likeCount;
     private boolean isTrending;
 }
