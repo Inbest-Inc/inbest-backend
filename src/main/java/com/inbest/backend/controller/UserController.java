@@ -25,63 +25,6 @@ public class UserController
     private final UserRepository userRepository;
     private final FollowService followService;
 
-    @GetMapping("/{username}")
-    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username, Authentication authentication)
-        {
-            try
-            {
-                Optional<User> user = userRepository.findByUsername(username);
-                if (!user.isPresent()) {
-                    Map<String, Object> errorResponse = Map.of(
-                            "status", "error",
-                            "message", "User not found"
-                    );
-                    return ResponseEntity.status(404).body(errorResponse);
-                }
-                Long followerCount = followService.getFollowerCount(username);
-                Long followingCount = followService.getFollowingCount(username);
-                String imageUrl = user.get().getImageUrl();
-                String fullName = userService.getPublicUserInfo(username);
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("status", "success");
-                response.put("message", "User information fetched successfully");
-                response.put("fullName", fullName);
-                response.put("followerCount", followerCount);
-                response.put("followingCount", followingCount);
-                response.put("imageUrl", imageUrl);
-
-                if (authentication != null && authentication.isAuthenticated())
-                {
-                    String currentUsername = authentication.getName();
-
-                    if (!currentUsername.equals(username))
-                    {
-                        boolean isFollowing = followService.isFollowing(currentUsername, username);
-                        response.put("following", isFollowing);
-                    }
-                    else
-                    {
-                        response.put("following", false);
-                    }
-                }
-                else
-                {
-                    response.put("following", false); // authorize degilse following: false
-                }
-
-                return ResponseEntity.ok(response);
-            }
-            catch (Exception e)
-        {
-            Map<String, Object> errorResponse = Map.of(
-                    "status", "error",
-                    "message", "Failed to fetch user information"
-            );
-            return ResponseEntity.status(500).body(errorResponse);
-        }
-    }
-
     @PutMapping("/update")
     public ResponseEntity<?> updateUserNameAndSurname(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
         try {
@@ -159,6 +102,104 @@ public class UserController
             Map<String, Object> errorResponse = Map.of(
                     "status", "error",
                     "message", "Failed to search users"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/check")
+    public ResponseEntity<?> checkUserAuthentication(Authentication authentication)
+    {
+        try
+        {
+            if (authentication != null && authentication.isAuthenticated())
+            {
+                String currentUsername = authentication.getName();
+                Optional<User> user = userRepository.findByUsername(currentUsername);
+                if (user.isEmpty()) {
+                    Map<String, Object> errorResponse = Map.of(
+                            "status", "error",
+                            "message", "User not found."
+                    );
+                    return ResponseEntity.status(404).body(errorResponse);
+                }
+                String imageUrl = user.get().getImageUrl();
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("status", "success");
+                response.put("username", currentUsername);
+                response.put("imageUrl", imageUrl);
+
+                return ResponseEntity.ok(response);
+            }
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch user information."
+            );
+
+            return ResponseEntity.status(403).body(errorResponse);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch user information."
+            );
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username, Authentication authentication)
+    {
+        try
+        {
+            Optional<User> user = userRepository.findByUsername(username);
+            if (!user.isPresent()) {
+                Map<String, Object> errorResponse = Map.of(
+                        "status", "error",
+                        "message", "User not found"
+                );
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+            Long followerCount = followService.getFollowerCount(username);
+            Long followingCount = followService.getFollowingCount(username);
+            String imageUrl = user.get().getImageUrl();
+            String fullName = userService.getPublicUserInfo(username);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("fullName", fullName);
+            response.put("followerCount", followerCount);
+            response.put("followingCount", followingCount);
+            response.put("imageUrl", imageUrl);
+
+            if (authentication != null && authentication.isAuthenticated())
+            {
+                String currentUsername = authentication.getName();
+
+                if (!currentUsername.equals(username))
+                {
+                    boolean isFollowing = followService.isFollowing(currentUsername, username);
+                    response.put("following", isFollowing);
+                }
+                else
+                {
+                    response.put("following", false);
+                }
+            }
+            else
+            {
+                response.put("following", false); // authorize degilse following: false
+            }
+
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e)
+        {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to fetch user information"
             );
             return ResponseEntity.status(500).body(errorResponse);
         }

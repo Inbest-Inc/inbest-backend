@@ -1,6 +1,7 @@
 package com.inbest.backend.exception.handler;
 
 import com.inbest.backend.exception.UserNotFoundException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -22,6 +23,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("result", ex.getMessage()));
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(SignatureException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("result", "JWT Token expired."));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
