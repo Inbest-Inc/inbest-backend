@@ -1,6 +1,6 @@
 package com.inbest.backend.controller;
 
-import com.inbest.backend.model.User;
+import com.inbest.backend.dto.FollowDTO;
 import com.inbest.backend.service.AuthenticationService;
 import com.inbest.backend.service.FollowService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +74,7 @@ public class FollowController
     {
         try
         {
-            List<User> followingList = followService.getFollowing(username);
+            List<FollowDTO> followingList = followService.getFollowing(username);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "Following users fetched successfully",
@@ -97,7 +97,7 @@ public class FollowController
     {
         try
         {
-            List<User> followersList = followService.getFollowers(username);
+            List<FollowDTO> followersList = followService.getFollowers(username);
             Map<String, Object> response = Map.of(
                     "status", "success",
                     "message", "Followers fetched successfully",
@@ -138,12 +138,10 @@ public class FollowController
         }
     }
 
-    // Future endpoint for following count
-    /*
-    @GetMapping("/{userId}/following/count")
-    public ResponseEntity<Map<String, Object>> getFollowingCount(@PathVariable Long userId) {
+    @GetMapping("/{username}/following/count")
+    public ResponseEntity<Map<String, Object>> getFollowingCount(@PathVariable String username) {
         try {
-            Long followingCount = followService.getFollowingCount(userId);
+            Long followingCount = followService.getFollowingCount(username);
             Map<String, Object> response = Map.of(
                 "status", "success",
                 "message", "Following count fetched successfully",
@@ -158,5 +156,4 @@ public class FollowController
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
-    */
 }
