@@ -16,4 +16,40 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
      * @return List of portfolio metrics for the specified portfolio, with most recent first
      */
     List<PortfolioMetric> findByPortfolioIdOrderByLastUpdatedDateDesc(Integer portfolioId);
+    @Query(value = """
+    SELECT pm.* FROM portfoliometrics pm
+    JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+    WHERE p.visibility = 'public'
+    ORDER BY pm.total_return DESC
+    LIMIT 10
+""", nativeQuery = true)
+    List<PortfolioMetric> findTop10ByTotalReturnForPublic();
+
+    @Query(value = """
+    SELECT pm.* FROM portfoliometrics pm
+    JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+    WHERE p.visibility = 'public'
+    ORDER BY pm.daily_return DESC
+    LIMIT 10
+""", nativeQuery = true)
+    List<PortfolioMetric> findTop10ByDailyReturnForPublic();
+
+    @Query(value = """
+    SELECT pm.* FROM portfoliometrics pm
+    JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+    WHERE p.visibility = 'public'
+    ORDER BY pm.monthly_return DESC
+    LIMIT 10
+""", nativeQuery = true)
+    List<PortfolioMetric> findTop10ByMonthlyReturnForPublic();
+
+    @Query(value = """
+    SELECT pm.* FROM portfoliometrics pm
+    JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+    WHERE p.visibility = 'public'
+    ORDER BY pm.hourly_return DESC
+    LIMIT 10
+""", nativeQuery = true)
+    List<PortfolioMetric> findTop10ByHourlyReturnForPublic();
+
 }

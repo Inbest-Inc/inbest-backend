@@ -5,6 +5,7 @@ import com.inbest.backend.authentication.AuthenticationResponse;
 import com.inbest.backend.authentication.RegisterRequest;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.Role;
+import com.inbest.backend.model.TokenType;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.UserRepository;
 import com.inbest.backend.service.JwtService; // Bean olarak oluşturulduğu için kullanilmamis gibi gozukuyor
@@ -26,6 +27,8 @@ public class AuthenticationService
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TokenService tokenService;
+    private final EmailService emailService;
 
     public AuthenticationResponse register(RegisterRequest request)
     {
@@ -41,19 +44,51 @@ public class AuthenticationService
                 .name(request.getName())
                 .surname(request.getSurname())
                 .dateJoined(LocalDateTime.now())
+                .isVerified(false)
+                .isEnabled(false)
+                .imageUrl("https://inbest-bucket.s3.eu-central-1.amazonaws.com/default.svg")
                 .role(Role.USER)  // Default role ADMIN will be added from database manually
                 .build();
 
         repository.save(user);
 
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder().token(jwtToken).build();
+        String token = tokenService.createToken(user, TokenType.EMAIL_VERIFICATION, 30);
+
+        String verificationLink = "http://tryinbest.com/verify?token=" + token;
+
+        emailService.sendWelcomeEmail(user.getEmail(), verificationLink);
+
+        return AuthenticationResponse.builder().build();
+    }
+
+    public boolean verifyEmail(String token)
+    {
+        var optionalToken = tokenService.validateToken(token, TokenType.EMAIL_VERIFICATION);
+
+        if (optionalToken.isEmpty())
+        {
+            return false;
+        }
+
+        var verificationToken = optionalToken.get();
+        User user = verificationToken.getUser();
+        user.setVerified(true);
+        user.setEnabled(true);
+        repository.save(user);
+
+        tokenService.invalidateToken(token);
+        return true;
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request)
     {
         var user = repository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("Invalid username or password"));
+
+        if (!user.isVerified())
+        {
+            throw new IllegalStateException("Please verify your email before logging in.");
+        }
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

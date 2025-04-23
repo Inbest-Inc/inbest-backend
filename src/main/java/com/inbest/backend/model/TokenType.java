@@ -3,5 +3,6 @@ package com.inbest.backend.model;
 public enum TokenType
 {
     PASSWORD_RESET,
-    LOGOUT
+    LOGOUT,
+    EMAIL_VERIFICATION,
 }
