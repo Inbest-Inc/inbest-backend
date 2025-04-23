@@ -28,6 +28,6 @@ public class ForgotPasswordService
         String resetToken = tokenService.createToken(user, TokenType.PASSWORD_RESET, EXPIRATION_TIME);
         String resetLink = "http://tryinbest.com/api/resetPassword?token=" + resetToken;
 
-        emailService.sendEmail(user.getEmail(), "Reset Password", resetLink);
+        emailService.sendForgotPasswordEmail(user.getEmail(), user.getName(), resetLink);
     }
 }
