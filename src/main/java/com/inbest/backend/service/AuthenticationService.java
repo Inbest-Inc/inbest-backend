@@ -41,6 +41,7 @@ public class AuthenticationService
                 .name(request.getName())
                 .surname(request.getSurname())
                 .dateJoined(LocalDateTime.now())
+                .imageUrl("https://inbest-bucket.s3.eu-central-1.amazonaws.com/default.svg")
                 .role(Role.USER)  // Default role ADMIN will be added from database manually
                 .build();
 
