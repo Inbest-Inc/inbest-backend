@@ -1,6 +1,5 @@
 package com.inbest.backend.service;
 
-import com.inbest.backend.dto.UserDTO;
 import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.exception.UserNotFoundException;
 import com.inbest.backend.model.User;
@@ -12,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -64,5 +64,9 @@ public class UserService {
         // Update password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         repository.save(user);
+    }
+
+    public List<User> searchUsers(String searchTerm) {
+        return repository.searchUsers(searchTerm);
     }
 }
