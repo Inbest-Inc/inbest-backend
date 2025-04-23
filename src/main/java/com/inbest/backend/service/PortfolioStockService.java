@@ -42,6 +42,8 @@ public class PortfolioStockService
 
     public InvestmentActivityResponseDTO addStockToPortfolio(Integer portfolioId, String tickerName, Double quantity) throws Exception
     {
+        LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -67,7 +69,7 @@ public class PortfolioStockService
        activity.setStock(stock);
        activity.setStockQuantity(quantity);
        activity.setDate(LocalDateTime.now());
-       activity.setActionType(InvestmentActivity.ActionType.ADD);
+       activity.setActionType(InvestmentActivity.ActionType.OPEN);
        activity.setOldPositionWeight(BigDecimal.ZERO);
 
 
@@ -76,13 +78,13 @@ public class PortfolioStockService
         PortfolioStockMetric portfolioStockMetric = PortfolioStockMetric.builder()
                 .portfolioId(portfolioId)
                 .stockId(stock.getStockId())
-                .date(LocalDate.now().atStartOfDay())
+                .date(latestDate)
                 .quantity(quantity)
                 .averageCost(BigDecimal.valueOf(stock.getCurrentPrice()))
                 .currentValue(BigDecimal.valueOf(stock.getCurrentPrice()))
                 .totalReturn(BigDecimal.valueOf(0))
                 .positionWeight(BigDecimal.valueOf(0))
-                .lastTransactionType("ADD")
+                .lastTransactionType("OPEN")
                 .lastUpdated(Timestamp.from(Instant.now()).toLocalDateTime())
                 .build();
 
@@ -164,7 +166,10 @@ public class PortfolioStockService
         portfolioStockMetricRepository.save(portfolioStockMetric);
 
         recalculatePositionWeights(portfolioId);
-        activity.setNewPositionWeight(portfolioStockMetric.getPositionWeight());
+        PortfolioStockMetric newPortfolioStockMetric = portfolioStockMetricRepository
+                .findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioId, stock.getStockId())
+                .orElseThrow(() -> new Exception("Metrics not found"));
+        activity.setNewPositionWeight(newPortfolioStockMetric.getPositionWeight());
         investmentActivityRepository.save(activity);
         return convertToResponseDTO(activity);
 
@@ -173,6 +178,8 @@ public class PortfolioStockService
     @Transactional
     public InvestmentActivityResponseDTO removeStockFromPortfolio(Integer portfolioId, String tickerName) throws Exception
     {
+        LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
         PortfolioStockModel portfolioStock = portfolioStockRepository
@@ -190,13 +197,13 @@ public class PortfolioStockService
         activity.setPortfolio(portfolio);
         activity.setStockQuantity(portfolioStock.getQuantity());
         activity.setDate(LocalDateTime.now());
-        activity.setActionType(InvestmentActivity.ActionType.SELL);
+        activity.setActionType(InvestmentActivity.ActionType.CLOSE);
         activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
         activity.setNewPositionWeight(BigDecimal.ZERO);
 
         investmentActivityRepository.save(activity);
         portfolioStockRepository.deleteByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId());
-        portfolioStockMetricRepository.deleteByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(), LocalDate.now().atStartOfDay());
+        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stock.getStockId());
 
         recalculatePositionWeights(portfolioId);
         return convertToResponseDTO(activity);
@@ -209,8 +216,6 @@ public class PortfolioStockService
         if (latestDate == null) {
             throw new Exception("No records found for the portfolio");
         }
-
-        latestDate = latestDate.toLocalDate().atStartOfDay();  // Ensure the date is set to start of day with 00:00:00.000000
 
         List<PortfolioStockMetric> metrics = portfolioStockMetricRepository.findByPortfolioIdAndDate(portfolioId, latestDate);
 

@@ -45,8 +45,10 @@ public class InvestmentActivity {
     private BigDecimal newPositionWeight;
 
     public enum ActionType {
+        OPEN,
         BUY,
         SELL,
-        ADD
+        CLOSE
+
     }
-} 
+}
