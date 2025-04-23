@@ -3,6 +3,8 @@ package com.inbest.backend.controller;
 import com.inbest.backend.dto.UserUpdateDTO;
 import com.inbest.backend.dto.ChangePasswordDTO;
 import com.inbest.backend.exception.UserNotFoundException;
+import com.inbest.backend.model.User;
+import com.inbest.backend.repository.UserRepository;
 import com.inbest.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,47 +22,55 @@ public class UserController
 {
 
     private final UserService userService;
-    private final S3Service s3Service;
+    private final UserRepository userRepository;
     private final FollowService followService;
 
     @GetMapping("/{username}")
     public ResponseEntity<?> getPublicUserInfo(@PathVariable String username, Authentication authentication)
-    {
-        try
         {
-            Long followerCount = followService.getFollowerCount(username);
-            String imageUrl = s3Service.getImageUrl(username);
-            String fullName = userService.getPublicUserInfo(username);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "User information fetched successfully");
-            response.put("fullName", fullName);
-            response.put("followerCount", followerCount);
-            response.put("imageUrl", imageUrl);
-
-            if (authentication != null && authentication.isAuthenticated())
+            try
             {
-                String currentUsername = authentication.getName();
+                Optional<User> user = userRepository.findByUsername(username);
+                if (!user.isPresent()) {
+                    Map<String, Object> errorResponse = Map.of(
+                            "status", "error",
+                            "message", "User not found"
+                    );
+                    return ResponseEntity.status(404).body(errorResponse);
+                }
+                Long followerCount = followService.getFollowerCount(username);
+                String imageUrl = user.get().getImageUrl();
+                String fullName = userService.getPublicUserInfo(username);
 
-                if (!currentUsername.equals(username))
+                Map<String, Object> response = new HashMap<>();
+                response.put("status", "success");
+                response.put("message", "User information fetched successfully");
+                response.put("fullName", fullName);
+                response.put("followerCount", followerCount);
+                response.put("imageUrl", imageUrl);
+
+                if (authentication != null && authentication.isAuthenticated())
                 {
-                    boolean isFollowing = followService.isFollowing(currentUsername, username);
-                    response.put("following", isFollowing);
+                    String currentUsername = authentication.getName();
+
+                    if (!currentUsername.equals(username))
+                    {
+                        boolean isFollowing = followService.isFollowing(currentUsername, username);
+                        response.put("following", isFollowing);
+                    }
+                    else
+                    {
+                        response.put("following", false);
+                    }
                 }
                 else
                 {
-                    response.put("following", false);
+                    response.put("following", false); // authorize degilse following: false
                 }
-            }
-            else
-            {
-                response.put("following", false); // authorize degilse following: false
-            }
 
-            return ResponseEntity.ok(response);
-        }
-        catch (Exception e)
+                return ResponseEntity.ok(response);
+            }
+            catch (Exception e)
         {
             Map<String, Object> errorResponse = Map.of(
                     "status", "error",
@@ -111,6 +120,45 @@ public class UserController
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "error", "error", "An error occurred while changing password"));
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam String searchTerm) {
+        try {
+            List<User> users = userService.searchUsers(searchTerm);
+
+            if (users.isEmpty()) {
+                Map<String, Object> errorResponse = Map.of(
+                        "status", "error",
+                        "message", "No users found"
+                );
+                return ResponseEntity.status(404).body(errorResponse);
+            }
+
+            List<Map<String, Object>> userList = new ArrayList<>();
+            for (User user : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("username", user.getUsername());
+                userMap.put("fullName", user.getName() + " " + user.getSurname());
+                userMap.put("imageUrl", user.getImageUrl());
+                userList.add(userMap);
+            }
+
+            Map<String, Object> response = Map.of(
+                    "status", "success",
+                    "message", "Users found",
+                    "data", userList
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = Map.of(
+                    "status", "error",
+                    "message", "Failed to search users"
+            );
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 }

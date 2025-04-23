@@ -48,6 +48,9 @@ public class User implements UserDetails
     @Column(name = "is_enabled", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isEnabled = false;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'USER'")
     private Role role;
