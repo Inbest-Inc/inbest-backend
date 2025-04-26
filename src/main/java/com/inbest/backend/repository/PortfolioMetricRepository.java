@@ -30,7 +30,7 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
                         FROM portfoliometrics pm
                                  JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
                         WHERE p.visibility = 'public'
-                        ORDER BY pm.total_return DESC
+                        ORDER BY pm.daily_return DESC
                         LIMIT 10
             
             """, nativeQuery = true)
