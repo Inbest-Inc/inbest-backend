@@ -40,6 +40,7 @@ public class BestPortfoliosService {
         return metricsList.stream().map(metric -> {
             Portfolio portfolio = metric.getPortfolio();
             User user = portfolio.getUser();
+            FollowService followService = new FollowService();
 
             UserDTO userDTO = UserDTO.builder()
                     .username(user.getUsername())
@@ -47,6 +48,7 @@ public class BestPortfoliosService {
                     .name(user.getName())
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
+                    .followerCount(followService.getFollowerCount(user.getUsername()))
                     .build();
 
             PortfolioDTO portfolioDTO = PortfolioDTO.builder()
