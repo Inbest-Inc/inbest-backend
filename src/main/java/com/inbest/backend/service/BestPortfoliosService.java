@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class BestPortfoliosService {
 
     private final PortfolioMetricRepository portfolioMetricRepository;
+    private final FollowService followService;
 
     public List<BestPortfolioResponse> getBestPortfoliosByTotalReturn() {
         return buildResponse(portfolioMetricRepository.findTop10ByTotalReturnForPublic());
@@ -40,7 +41,6 @@ public class BestPortfoliosService {
         return metricsList.stream().map(metric -> {
             Portfolio portfolio = metric.getPortfolio();
             User user = portfolio.getUser();
-            FollowService followService = new FollowService();
 
             UserDTO userDTO = UserDTO.builder()
                     .username(user.getUsername())
