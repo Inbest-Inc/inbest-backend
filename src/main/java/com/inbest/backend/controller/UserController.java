@@ -124,11 +124,13 @@ public class UserController
                     return ResponseEntity.status(404).body(errorResponse);
                 }
                 String imageUrl = user.get().getImageUrl();
+                boolean isVerified = user.get().isVerified();
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("status", "success");
                 response.put("username", currentUsername);
                 response.put("imageUrl", imageUrl);
+                response.put("isVerified", isVerified);
 
                 return ResponseEntity.ok(response);
             }
