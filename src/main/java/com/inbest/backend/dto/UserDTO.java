@@ -16,5 +16,6 @@ public class UserDTO
     private String surname;
     private String image_url;
     private Long followerCount;
+    private Long holdingCount;
 
 }

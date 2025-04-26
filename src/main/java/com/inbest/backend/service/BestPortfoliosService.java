@@ -8,6 +8,7 @@ import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
 import com.inbest.backend.model.response.PortfolioMetricResponse;
 import com.inbest.backend.repository.PortfolioMetricRepository;
+import com.inbest.backend.repository.PortfolioStockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class BestPortfoliosService {
 
     private final PortfolioMetricRepository portfolioMetricRepository;
     private final FollowService followService;
+    private final PortfolioStockRepository portfolioStockRepository;
 
     public List<BestPortfolioResponse> getBestPortfoliosByTotalReturn() {
         return buildResponse(portfolioMetricRepository.findTop10ByTotalReturnForPublic());
@@ -49,6 +51,7 @@ public class BestPortfoliosService {
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
                     .followerCount(followService.getFollowerCount(user.getUsername()))
+                    .holdingCount(portfolioStockRepository.countByPortfolio_PortfolioId(portfolio.getPortfolioId()))
                     .build();
 
             PortfolioDTO portfolioDTO = PortfolioDTO.builder()
