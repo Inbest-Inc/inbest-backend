@@ -1,7 +1,6 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.dto.PortfolioDTO;
-import com.inbest.backend.model.Follow;
 import com.inbest.backend.model.response.BestPortfolioResponse;
 import com.inbest.backend.dto.UserDTO;
 import com.inbest.backend.model.position.PortfolioMetric;
