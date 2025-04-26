@@ -61,12 +61,18 @@ public class FollowService
     {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         return followRepository.findByFollower(user)
                 .stream()
-                .map(follow -> new FollowDTO(
-                    follow.getFollowing().getUsername(),
-                    follow.getFollowing().getImageUrl()
-                ))
+                .map(follow -> {
+                    String targetUsername = follow.getFollowing().getUsername();
+                    boolean isFollowing = isFollowing(username, targetUsername);
+                    return new FollowDTO(
+                            targetUsername,
+                            follow.getFollowing().getImageUrl(),
+                            isFollowing
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
@@ -74,14 +80,21 @@ public class FollowService
     {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         return followRepository.findByFollowing(user)
                 .stream()
-                .map(follow -> new FollowDTO(
-                    follow.getFollower().getUsername(),
-                    follow.getFollower().getImageUrl()
-                ))
+                .map(follow -> {
+                    String targetUsername = follow.getFollower().getUsername();
+                    boolean isFollowing = isFollowing(username, targetUsername);
+                    return new FollowDTO(
+                            targetUsername,
+                            follow.getFollower().getImageUrl(),
+                            isFollowing
+                    );
+                })
                 .collect(Collectors.toList());
     }
+
 
     public Long getFollowerCount(String username)
     {
