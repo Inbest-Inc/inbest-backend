@@ -1,6 +1,7 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.dto.PortfolioDTO;
+import com.inbest.backend.model.Follow;
 import com.inbest.backend.model.response.BestPortfolioResponse;
 import com.inbest.backend.dto.UserDTO;
 import com.inbest.backend.model.position.PortfolioMetric;
@@ -40,6 +41,7 @@ public class BestPortfoliosService {
         return metricsList.stream().map(metric -> {
             Portfolio portfolio = metric.getPortfolio();
             User user = portfolio.getUser();
+            FollowService followService = new FollowService();
 
             UserDTO userDTO = UserDTO.builder()
                     .username(user.getUsername())
@@ -47,6 +49,7 @@ public class BestPortfoliosService {
                     .name(user.getName())
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
+                    .followerCount(followService.getFollowerCount(user.getUsername()))
                     .build();
 
             PortfolioDTO portfolioDTO = PortfolioDTO.builder()
