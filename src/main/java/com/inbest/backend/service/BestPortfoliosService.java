@@ -17,29 +17,35 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class BestPortfoliosService {
+public class BestPortfoliosService
+{
 
     private final PortfolioMetricRepository portfolioMetricRepository;
     private final FollowService followService;
     private final PortfolioStockRepository portfolioStockRepository;
 
-    public List<BestPortfolioResponse> getBestPortfoliosByTotalReturn() {
+    public List<BestPortfolioResponse> getBestPortfoliosByTotalReturn()
+    {
         return buildResponse(portfolioMetricRepository.findTop10ByTotalReturnForPublic());
     }
 
-    public List<BestPortfolioResponse> getBestPortfoliosByDailyReturn() {
+    public List<BestPortfolioResponse> getBestPortfoliosByDailyReturn()
+    {
         return buildResponse(portfolioMetricRepository.findTop10ByDailyReturnForPublic());
     }
 
-    public List<BestPortfolioResponse> getBestPortfoliosByMonthlyReturn() {
+    public List<BestPortfolioResponse> getBestPortfoliosByMonthlyReturn()
+    {
         return buildResponse(portfolioMetricRepository.findTop10ByMonthlyReturnForPublic());
     }
 
-    public List<BestPortfolioResponse> getBestPortfoliosByHourlyReturn() {
+    public List<BestPortfolioResponse> getBestPortfoliosByHourlyReturn()
+    {
         return buildResponse(portfolioMetricRepository.findTop10ByHourlyReturnForPublic());
     }
 
-    private List<BestPortfolioResponse> buildResponse(List<PortfolioMetric> metricsList) {
+    private List<BestPortfolioResponse> buildResponse(List<PortfolioMetric> metricsList)
+    {
         return metricsList.stream().map(metric -> {
             Portfolio portfolio = metric.getPortfolio();
             User user = portfolio.getUser();
@@ -50,12 +56,15 @@ public class BestPortfoliosService {
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
                     .followerCount(followService.getFollowerCount(user.getUsername()))
-                    .holdingCount(portfolioStockRepository.countByPortfolio_PortfolioId(metric.getPortfolioId()))
                     .build();
+
+            Integer distinctStockCount = portfolioStockRepository.countDistinctStocksByPortfolio(portfolio);
+
 
             PortfolioDTO portfolioDTO = PortfolioDTO.builder()
                     .portfolioName(portfolio.getPortfolioName())
                     .visibility(portfolio.getVisibility())
+                    .holdingCount(distinctStockCount)
                     .build();
 
             PortfolioMetricResponse metricDTO = PortfolioMetricResponse.builder()

@@ -4,6 +4,7 @@ import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.PortfolioStockModel;
 import com.inbest.backend.model.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
@@ -15,6 +16,6 @@ public interface PortfolioStockRepository extends JpaRepository<PortfolioStockMo
 
     void deleteByPortfolio_PortfolioIdAndStock_StockId(Integer portfolioId, Integer stockId);
 
-    long countByPortfolio_PortfolioId(Integer portfolioId);
-
+    @Query("SELECT COUNT(DISTINCT ps.stock) FROM PortfolioStockModel ps WHERE ps.portfolio = :portfolio")
+    Integer countDistinctStocksByPortfolio(Portfolio portfolio);
 }
