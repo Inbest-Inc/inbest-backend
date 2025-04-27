@@ -8,6 +8,7 @@ import com.inbest.backend.repository.UserRepository;
 import com.inbest.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -86,6 +87,7 @@ public class UserController
         }
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(@RequestParam String searchTerm, @AuthenticationPrincipal User currentUser)
     {
