@@ -47,6 +47,8 @@ public class SecurityConfig {
                                 "/api/portfolios/best/**",
                                 "/api/follow/*/followers/**",
                                 "/api/follow/*/following/**",
+                                "/api/charts/**",
+                                "/api/follow/*/following/**",
                                 "/api/user/search/**",
                                 "/actuator/**",
                                 "/api/hikari-monitor/**"
