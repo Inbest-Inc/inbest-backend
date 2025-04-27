@@ -49,7 +49,7 @@ public class SecurityConfig {
                                 "/api/follow/*/following/**",
                                 "/api/user/search/**",
                                 "/actuator/**",
-                                "/hikari-monitor/**"
+                                "/api/hikari-monitor/**"
 
 
 
