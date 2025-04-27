@@ -166,6 +166,13 @@ public class PostService
         User user = post.getUser();
         InvestmentActivity activity = post.getInvestmentActivity();
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        boolean isLiked = likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId());
+
         UserDTO userDTO = UserDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -199,7 +206,7 @@ public class PostService
         dto.setTrending(post.getIsTrending());
         dto.setUserDTO(userDTO);
         dto.setInvestmentActivityResponseDTO(activityDTO);
-        dto.setLiked(hasUserLikedPost(post.getId()));
+        dto.setLiked(isLiked);
         return dto;
     }
 
@@ -208,18 +215,7 @@ public class PostService
         List<Post> posts = postRepository.findPostsByPortfolioId(portfolioId);
 
         return posts.stream()
-                .map(this::convertToDTO) // Reuse your existing `convertToDTO(Post post)` method
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
-    }
-
-    public boolean hasUserLikedPost(Long postId)
-    {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        return likeRepository.existsByUserIdAndPostId(user.getId(), postId);
     }
 }
