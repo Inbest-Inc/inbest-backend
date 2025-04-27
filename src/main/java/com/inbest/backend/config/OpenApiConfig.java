@@ -15,8 +15,7 @@ public class OpenApiConfig { //Swagger UI düzenlemesi icin
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .servers(List.of( new Server().url("http://localhost:8080").description("Localhost Server"),
-                                  new Server().url("https://api.tryinbest.com").description("Production Server")
+                .servers(List.of( new Server().url("https://api.tryinbest.com").description("Production Server")
                 ))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()

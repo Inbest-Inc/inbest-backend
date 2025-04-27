@@ -6,6 +6,7 @@ import com.inbest.backend.model.InvestmentActivity;
 import com.inbest.backend.model.Post;
 import com.inbest.backend.model.User;
 import com.inbest.backend.repository.InvestmentActivityRepository;
+import com.inbest.backend.repository.LikeRepository;
 import com.inbest.backend.repository.PostRepository;
 import com.inbest.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class PostService
     private final UserRepository userRepository;
     private final InvestmentActivityRepository investmentActivityRepository;
     private final FollowService followService;
+    private final LikeRepository likeRepository;
 
     @Transactional
     public PostResponseDTO createPost(PostCreateDTO postDTO)
@@ -164,6 +166,13 @@ public class PostService
         User user = post.getUser();
         InvestmentActivity activity = post.getInvestmentActivity();
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        boolean isLiked = likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId());
+
         UserDTO userDTO = UserDTO.builder()
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -197,14 +206,16 @@ public class PostService
         dto.setTrending(post.getIsTrending());
         dto.setUserDTO(userDTO);
         dto.setInvestmentActivityResponseDTO(activityDTO);
+        dto.setLiked(isLiked);
         return dto;
     }
 
-    public List<PostResponseDTO> getPostsByPortfolio(Long portfolioId) {
+    public List<PostResponseDTO> getPostsByPortfolio(Long portfolioId)
+    {
         List<Post> posts = postRepository.findPostsByPortfolioId(portfolioId);
 
         return posts.stream()
-                .map(this::convertToDTO) // Reuse your existing `convertToDTO(Post post)` method
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 }

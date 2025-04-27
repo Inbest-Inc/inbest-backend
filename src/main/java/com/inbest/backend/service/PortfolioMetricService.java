@@ -21,7 +21,8 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class PortfolioMetricService {
+public class PortfolioMetricService
+{
 
     private final PortfolioMetricRepository portfolioMetricRepository;
     private final PortfolioRepository portfolioRepository;
@@ -36,11 +37,13 @@ public class PortfolioMetricService {
      * @return List of metrics for the specified portfolio
      * @throws Exception if portfolio does not exist or user doesn't have access
      */
-    public PortfolioMetricResponse getMetricsByPortfolioId(Integer portfolioId) throws Exception {
+    public PortfolioMetricResponse getMetricsByPortfolioId(Integer portfolioId) throws Exception
+    {
         // Get portfolio by ID
         Optional<Portfolio> portfolioOptional = portfolioRepository.findByPortfolioId(portfolioId);
 
-        if (portfolioOptional.isEmpty()) {
+        if (portfolioOptional.isEmpty())
+        {
             throw new Exception("Portfolio not found with ID: " + portfolioId);
         }
 
@@ -70,7 +73,8 @@ public class PortfolioMetricService {
         // User is authorized, return metrics
         metrics = portfolioMetricRepository.findByPortfolioIdOrderByLastUpdatedDateDesc(portfolioId);
 
-        if (metrics.isEmpty()) {
+        if (metrics.isEmpty())
+        {
             return null;
         }
 

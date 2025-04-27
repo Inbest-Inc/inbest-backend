@@ -8,7 +8,9 @@ import com.inbest.backend.repository.UserRepository;
 import com.inbest.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
@@ -26,54 +28,83 @@ public class UserController
     private final FollowService followService;
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateUserNameAndSurname(@Valid @RequestBody UserUpdateDTO userUpdateDTO) {
-        try {
+    public ResponseEntity<?> updateUserNameAndSurname(@Valid @RequestBody UserUpdateDTO userUpdateDTO)
+    {
+        try
+        {
             userService.updateUserNameAndSurname(userUpdateDTO);
 
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "message", "User information updated successfully"
             ));
-        } catch (UserNotFoundException e) {
+        }
+        catch (UserNotFoundException e)
+        {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", "error", "message", e.getMessage()));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "error", "message", "An error occurred while updating user information"));
         }
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO request) {
-        try {
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordDTO request)
+    {
+        try
+        {
             userService.changePassword(request);
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "message", "Password updated successfully"
             ));
-        } catch (UserNotFoundException e) {
+        }
+        catch (UserNotFoundException e)
+        {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", "error", "error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("must be at least 6 characters")) {
+        }
+        catch (IllegalArgumentException e)
+        {
+            if (e.getMessage().contains("must be at least 6 characters"))
+            {
                 return ResponseEntity.badRequest()
                         .body(Map.of("status", "error", "error", "New password must be at least 6 characters"));
-            }  else {
+            }
+            else
+            {
                 return ResponseEntity.badRequest()
                         .body(Map.of("status", "error", "error", e.getMessage()));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("status", "error", "error", "An error occurred while changing password"));
         }
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/search")
-    public ResponseEntity<?> searchUsers(@RequestParam String searchTerm) {
-        try {
+    public ResponseEntity<?> searchUsers(@RequestParam String searchTerm, @AuthenticationPrincipal User currentUser)
+    {
+        try
+        {
+            if (currentUser == null)
+            {
+                Map<String, Object> errorResponse = Map.of(
+                        "status", "error",
+                        "message", "You must be logged in to search"
+                );
+                return ResponseEntity.status(401).body(errorResponse); // Unauthorized
+            }
             List<User> users = userService.searchUsers(searchTerm);
 
-            if (users.isEmpty()) {
+            if (users.isEmpty())
+            {
                 Map<String, Object> errorResponse = Map.of(
                         "status", "error",
                         "message", "No users found"
@@ -82,7 +113,8 @@ public class UserController
             }
 
             List<Map<String, Object>> userList = new ArrayList<>();
-            for (User user : users) {
+            for (User user : users)
+            {
                 Map<String, Object> userMap = new HashMap<>();
                 userMap.put("username", user.getUsername());
                 userMap.put("fullName", user.getName() + " " + user.getSurname());
@@ -98,7 +130,9 @@ public class UserController
 
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Map<String, Object> errorResponse = Map.of(
                     "status", "error",
                     "message", "Failed to search users"
@@ -116,7 +150,8 @@ public class UserController
             {
                 String currentUsername = authentication.getName();
                 Optional<User> user = userRepository.findByUsername(currentUsername);
-                if (user.isEmpty()) {
+                if (user.isEmpty())
+                {
                     Map<String, Object> errorResponse = Map.of(
                             "status", "error",
                             "message", "User not found."
@@ -157,7 +192,8 @@ public class UserController
         try
         {
             Optional<User> user = userRepository.findByUsername(username);
-            if (!user.isPresent()) {
+            if (!user.isPresent())
+            {
                 Map<String, Object> errorResponse = Map.of(
                         "status", "error",
                         "message", "User not found"

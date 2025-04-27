@@ -20,4 +20,5 @@ public class PostResponseDTO {
     private boolean isTrending;
     private UserDTO userDTO;
     private InvestmentActivityResponseDTO investmentActivityResponseDTO;
+    private boolean isLiked;
 }

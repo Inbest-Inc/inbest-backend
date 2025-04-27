@@ -15,4 +15,5 @@ public class CommentResponseDTO
     private Integer userId;
     private String comment;
     private LocalDateTime createdAt;
+    private String imageUrl;
 }
