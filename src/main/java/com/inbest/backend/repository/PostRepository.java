@@ -4,9 +4,11 @@ import com.inbest.backend.model.Post;
 import com.inbest.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long>
 {
@@ -18,4 +20,14 @@ public interface PostRepository extends JpaRepository<Post, Long>
     List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
 
     List<Post> findByUserOrderByCreatedAtDesc(User user);
+
+    @Query("""
+            SELECT p
+            FROM Post p
+            JOIN FETCH p.investmentActivity ia
+            JOIN FETCH ia.stock s
+            JOIN FETCH p.user u
+            WHERE ia.portfolio.portfolioId = :portfolioId
+            """)
+    List<Post> findPostsByPortfolioId(@Param("portfolioId") Long portfolioId);
 }

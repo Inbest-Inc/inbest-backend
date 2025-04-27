@@ -22,14 +22,16 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PostService {
+public class PostService
+{
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final InvestmentActivityRepository investmentActivityRepository;
     private final FollowService followService;
 
     @Transactional
-    public PostResponseDTO createPost(PostCreateDTO postDTO) {
+    public PostResponseDTO createPost(PostCreateDTO postDTO)
+    {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
@@ -46,42 +48,46 @@ public class PostService {
         post.setLikeCount(0);
         post.setCommentCount(0);
         post.setIsTrending(false);
-       
+
 
         Post savedPost = postRepository.save(post);
         return convertToDTO(savedPost);
     }
 
-    public List<PostResponseDTO> getAllPosts() {
+    public List<PostResponseDTO> getAllPosts()
+    {
         return postRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<PostResponseDTO> getPostsFromFollowedUsers() {
+    public List<PostResponseDTO> getPostsFromFollowedUsers()
+    {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
-        
+
         userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        
+
         List<FollowDTO> followedUsers = followService.getFollowing(username);
         List<User> users = followedUsers.stream()
                 .map(followDTO -> userRepository.findByUsername(followDTO.getUsername())
                         .orElseThrow(() -> new UserNotFoundException("User not found")))
                 .collect(Collectors.toList());
-        
+
         return postRepository.findByUserInOrderByCreatedAtDesc(users).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<PostResponseDTO> getPostById(Long id) {
+    public Optional<PostResponseDTO> getPostById(Long id)
+    {
         return postRepository.findById(id)
                 .map(this::convertToDTO);
     }
 
-    public List<PostResponseDTO> getPostsByUsername(String username) {
+    public List<PostResponseDTO> getPostsByUsername(String username)
+    {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return postRepository.findByUser(user).stream()
@@ -90,43 +96,48 @@ public class PostService {
     }
 
     @Transactional
-    public void deletePost(Long id) {
+    public void deletePost(Long id)
+    {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Post not found"));
         postRepository.delete(post);
     }
 
     @Transactional
-public void updateAllPostScores() {
-    List<Post> posts = postRepository.findAll();
-    for (Post post : posts) {
-        double score = calculatePostScore(post);
-        post.setTrendScore(score);
+    public void updateAllPostScores()
+    {
+        List<Post> posts = postRepository.findAll();
+        for (Post post : posts)
+        {
+            double score = calculatePostScore(post);
+            post.setTrendScore(score);
+        }
+        postRepository.saveAll(posts);
     }
-    postRepository.saveAll(posts);
-}
 
-    private double calculatePostScore(Post post) {
+    private double calculatePostScore(Post post)
+    {
         // Get post age in hours
         long minutesSinceCreation = ChronoUnit.MINUTES.between(post.getCreatedAt(), LocalDateTime.now());
-        int hoursSinceCreation = (int)Math.ceil(minutesSinceCreation / 60.0);
+        int hoursSinceCreation = (int) Math.ceil(minutesSinceCreation / 60.0);
 
         // Weight factors
         double likeWeight = 1.0;
         double commentWeight = 2.0; // Comments are weighted more than likes
         double timeDecayFactor = 0.95; // Score decays over time
-        
+
         // Calculate base score
-        double baseScore = (post.getLikeCount() * likeWeight) + 
-                          (post.getCommentCount() * commentWeight);
-        
+        double baseScore = (post.getLikeCount() * likeWeight) +
+                (post.getCommentCount() * commentWeight);
+
         // Apply time decay
         double timeDecay = Math.pow(timeDecayFactor, hoursSinceCreation);
-        
+
         return baseScore * timeDecay;
     }
 
-    public List<PostResponseDTO> getTrendingPosts() {
+    public List<PostResponseDTO> getTrendingPosts()
+    {
         return postRepository.findAllOrderByScoreDesc()
                 .stream()
                 .limit(10) //trend post size
@@ -134,7 +145,8 @@ public void updateAllPostScores() {
                 .collect(Collectors.toList());
     }
 
-    public List<PostResponseDTO> getCurrentUserPosts() {
+    public List<PostResponseDTO> getCurrentUserPosts()
+    {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
 
@@ -147,7 +159,8 @@ public void updateAllPostScores() {
     }
 
 
-    private PostResponseDTO convertToDTO(Post post) {
+    private PostResponseDTO convertToDTO(Post post)
+    {
         User user = post.getUser();
         InvestmentActivity activity = post.getInvestmentActivity();
 
@@ -185,5 +198,13 @@ public void updateAllPostScores() {
         dto.setUserDTO(userDTO);
         dto.setInvestmentActivityResponseDTO(activityDTO);
         return dto;
+    }
+
+    public List<PostResponseDTO> getPostsByPortfolio(Long portfolioId) {
+        List<Post> posts = postRepository.findPostsByPortfolioId(portfolioId);
+
+        return posts.stream()
+                .map(this::convertToDTO) // Reuse your existing `convertToDTO(Post post)` method
+                .collect(Collectors.toList());
     }
 }

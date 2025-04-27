@@ -18,12 +18,15 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
-public class PostController {
+public class PostController
+{
     private final PostService postService;
 
     @PostMapping
-    public ResponseEntity<?> createPost(@Valid @RequestBody PostCreateDTO postDTO) {
-        try {
+    public ResponseEntity<?> createPost(@Valid @RequestBody PostCreateDTO postDTO)
+    {
+        try
+        {
             PostResponseDTO createdPost = postService.createPost(postDTO);
 
             Map<String, Object> response = new HashMap<>();
@@ -32,7 +35,9 @@ public class PostController {
             response.put("post", createdPost);
 
             return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
+        }
+        catch (IllegalStateException e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", e.getMessage());
@@ -41,10 +46,13 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllPosts() {
-        try {
+    public ResponseEntity<?> getAllPosts()
+    {
+        try
+        {
             List<PostResponseDTO> allPosts = postService.getAllPosts();
-            if (allPosts.isEmpty()) {
+            if (allPosts.isEmpty())
+            {
                 return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
                         "message", "User do not have any posts"));
@@ -52,9 +60,11 @@ public class PostController {
             return ResponseEntity.status(200).body(Map.of(
                     "status", "success",
                     "message", "Posts found!",
-                    "data",allPosts
+                    "data", allPosts
             ));
-        } catch (DataAccessException e) {
+        }
+        catch (DataAccessException e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while accessing the database. Please try again later.");
@@ -63,23 +73,28 @@ public class PostController {
     }
 
     @GetMapping("/followed")
-    public ResponseEntity<?> getFollowedUsersPosts() {
-        try {
+    public ResponseEntity<?> getFollowedUsersPosts()
+    {
+        try
+        {
             List<PostResponseDTO> followedPosts = postService.getPostsFromFollowedUsers();
-            
-            if (followedPosts.isEmpty()) {
+
+            if (followedPosts.isEmpty())
+            {
                 return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
                         "message", "No posts found from followed users"
                 ));
             }
-            
+
             return ResponseEntity.status(200).body(Map.of(
                     "status", "success",
                     "message", "Posts from followed users fetched successfully",
                     "data", followedPosts
             ));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while fetching posts from followed users");
@@ -87,22 +102,27 @@ public class PostController {
         }
     }
 
-    
+
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPostById(@PathVariable Long id) {
-        try {
+    public ResponseEntity<?> getPostById(@PathVariable Long id)
+    {
+        try
+        {
             Optional<PostResponseDTO> post = postService.getPostById(id);
-            if (post.isPresent()) {
+            if (post.isPresent())
+            {
                 return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
                         "message", "Posts found!",
-                        "data",post.get()
+                        "data", post.get()
                 ));
             }
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
                     "message", "Post not found"));
-        } catch (DataAccessException e) {
+        }
+        catch (DataAccessException e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while accessing the database. Please try again later.");
@@ -111,10 +131,13 @@ public class PostController {
     }
 
     @GetMapping("/user/{username}")
-    public ResponseEntity<?> getPostsByUsername(@PathVariable String username) {
-        try {
+    public ResponseEntity<?> getPostsByUsername(@PathVariable String username)
+    {
+        try
+        {
             List<PostResponseDTO> posts = postService.getPostsByUsername(username);
-            if (posts.isEmpty()) {
+            if (posts.isEmpty())
+            {
                 return ResponseEntity.status(404).body(Map.of(
                         "status", "error",
                         "message", "No posts found for user: " + username));
@@ -122,13 +145,17 @@ public class PostController {
             return ResponseEntity.status(200).body(Map.of(
                     "status", "success",
                     "message", "Posts found!",
-                    "data",posts
+                    "data", posts
             ));
-        } catch (UserNotFoundException e) {
+        }
+        catch (UserNotFoundException e)
+        {
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
                     "message", e.getMessage()));
-        } catch (DataAccessException e) {
+        }
+        catch (DataAccessException e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while accessing the database. Please try again later.");
@@ -137,17 +164,23 @@ public class PostController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable Long id) {
-        try {
+    public ResponseEntity<?> deletePost(@PathVariable Long id)
+    {
+        try
+        {
             postService.deletePost(id);
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "message", "Post deleted successfully"));
-        } catch (IllegalStateException e) {
+        }
+        catch (IllegalStateException e)
+        {
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
                     "message", e.getMessage()));
-        } catch (DataAccessException e) {
+        }
+        catch (DataAccessException e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while accessing the database. Please try again later.");
@@ -157,7 +190,8 @@ public class PostController {
 
 
     @GetMapping("/trending")
-    public ResponseEntity<?> getTrendingPosts() {
+    public ResponseEntity<?> getTrendingPosts()
+    {
         List<PostResponseDTO> trendingPosts = postService.getTrendingPosts();
 
         return ResponseEntity.ok(Map.of(
@@ -168,10 +202,13 @@ public class PostController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUserPosts() {
-        try {
+    public ResponseEntity<?> getCurrentUserPosts()
+    {
+        try
+        {
             List<PostResponseDTO> userPosts = postService.getCurrentUserPosts();
-            if (userPosts.isEmpty()) {
+            if (userPosts.isEmpty())
+            {
                 return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
                         "message", "You don't have any posts yet"
@@ -182,7 +219,9 @@ public class PostController {
                     "message", "Your posts fetched successfully",
                     "data", userPosts
             ));
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Map<String, String> response = new HashMap<>();
             response.put("status", "error");
             response.put("message", "An error occurred while fetching your posts");
@@ -190,4 +229,9 @@ public class PostController {
         }
     }
 
+    @GetMapping("/portfolio/{portfolioId}")
+    public List<PostResponseDTO> getPostsByPortfolio(@PathVariable Long portfolioId)
+    {
+        return postService.getPostsByPortfolio(portfolioId);
+    }
 }
