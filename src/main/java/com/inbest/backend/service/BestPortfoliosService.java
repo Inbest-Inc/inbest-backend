@@ -1,5 +1,6 @@
 package com.inbest.backend.service;
 
+import com.inbest.backend.dto.BestPortfolioResponseDTO;
 import com.inbest.backend.dto.PortfolioDTO;
 import com.inbest.backend.model.response.BestPortfolioResponse;
 import com.inbest.backend.dto.UserDTO;
@@ -53,6 +54,7 @@ public class BestPortfoliosService
             UserDTO userDTO = UserDTO.builder()
                     .username(user.getUsername())
                     .name(user.getName())
+                    .email(null)
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
                     .followerCount(followService.getFollowerCount(user.getUsername()))
@@ -61,7 +63,7 @@ public class BestPortfoliosService
             Integer distinctStockCount = portfolioStockRepository.countDistinctStocksByPortfolio(portfolio);
 
 
-            PortfolioDTO portfolioDTO = PortfolioDTO.builder()
+            BestPortfolioResponseDTO bestPortfolioResponseDTO = BestPortfolioResponseDTO.builder()
                     .portfolioName(portfolio.getPortfolioName())
                     .visibility(portfolio.getVisibility())
                     .holdingCount(distinctStockCount)
@@ -83,7 +85,7 @@ public class BestPortfoliosService
             return BestPortfolioResponse.builder()
                     .portfolioMetric(metricDTO)
                     .user(userDTO)
-                    .portfolioDTO(portfolioDTO)
+                    .bestPortfolioResponseDTO(bestPortfolioResponseDTO)
                     .build();
 
         }).collect(Collectors.toList());

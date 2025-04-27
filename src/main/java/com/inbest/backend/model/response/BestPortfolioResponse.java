@@ -1,5 +1,6 @@
 package com.inbest.backend.model.response;
 
+import com.inbest.backend.dto.BestPortfolioResponseDTO;
 import com.inbest.backend.dto.PortfolioDTO;
 import com.inbest.backend.dto.UserDTO;
 import lombok.*;
@@ -12,6 +13,6 @@ public class BestPortfolioResponse {
 
     private PortfolioMetricResponse portfolioMetric;
     private UserDTO user;
-    private PortfolioDTO portfolioDTO;
+    private BestPortfolioResponseDTO bestPortfolioResponseDTO;
 
 }
