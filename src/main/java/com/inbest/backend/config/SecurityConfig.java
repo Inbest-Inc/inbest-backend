@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/api/posts/**",
                                 "/api/portfolios/best/**",
                                 "/api/follow/*/followers/**",
-                                "/api/follow/*/following/**"
+                                "/api/follow/*/following/**",
+                                "/api/charts/**"
 
 
                         ).permitAll()
