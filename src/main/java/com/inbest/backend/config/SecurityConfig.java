@@ -47,10 +47,13 @@ public class SecurityConfig {
                                 "/api/portfolios/best/**",
                                 "/api/follow/*/followers/**",
                                 "/api/follow/*/following/**",
-                                "/api/user/search/**"
+                                "/api/user/search/**",
+                                "/actuator/**",
+                                "/hikari-monitor/**"
 
 
-                        ).permitAll()
+
+                                ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
