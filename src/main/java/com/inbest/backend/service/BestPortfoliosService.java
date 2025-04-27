@@ -46,12 +46,11 @@ public class BestPortfoliosService {
 
             UserDTO userDTO = UserDTO.builder()
                     .username(user.getUsername())
-                    .email(user.getEmail())
                     .name(user.getName())
                     .surname(user.getSurname())
                     .image_url(user.getImageUrl())
                     .followerCount(followService.getFollowerCount(user.getUsername()))
-                    .holdingCount(portfolioStockRepository.countByPortfolio_PortfolioId(portfolio.getPortfolioId()))
+                    .holdingCount(portfolioStockRepository.countByPortfolio_PortfolioId(metric.getPortfolioId()))
                     .build();
 
             PortfolioDTO portfolioDTO = PortfolioDTO.builder()
