@@ -165,13 +165,15 @@ public class PostService
     {
         User user = post.getUser();
         InvestmentActivity activity = post.getInvestmentActivity();
-
+        boolean isLiked = false;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String username = auth.getName();
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        boolean isLiked = likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId());
+            isLiked = likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId());
+        }
 
         UserDTO userDTO = UserDTO.builder()
                 .username(user.getUsername())
