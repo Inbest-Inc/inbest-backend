@@ -3,21 +3,18 @@ package com.inbest.backend.service;
 import com.inbest.backend.dto.InvestmentActivityResponseDTO;
 import com.inbest.backend.model.*;
 import com.inbest.backend.model.position.PortfolioStockMetric;
-import com.inbest.backend.model.response.PortfolioStockResponse;
 import com.inbest.backend.repository.*;
 import jakarta.transaction.Transactional;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class PortfolioStockService
@@ -46,6 +43,45 @@ public class PortfolioStockService
     {
         LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
 
+        if (latestDate == null)
+        {
+            // Şu anki zaman (ET timezone'unda)
+            ZonedDateTime nowET = ZonedDateTime.now(ZoneId.of("America/New_York"));
+
+            LocalTime currentTime = nowET.toLocalTime();
+            LocalDate currentDate = nowET.toLocalDate();
+
+            // Borsa açık mı? 09:30 <= now < 16:00
+            LocalTime marketOpen = LocalTime.of(9, 30);
+            LocalTime marketClose = LocalTime.of(16, 0);
+
+            if (!nowET.getDayOfWeek().equals(DayOfWeek.SATURDAY) && !nowET.getDayOfWeek().equals(DayOfWeek.SUNDAY)
+                    && (currentTime.isAfter(marketOpen) && currentTime.isBefore(marketClose)))
+            {
+                // Borsa açık -> Saatin başına yuvarla (örnek 16:23 -> 16:00)
+                LocalDateTime roundedHour = nowET.truncatedTo(ChronoUnit.HOURS).toLocalDateTime();
+                latestDate = roundedHour;
+            }
+            else
+            {
+                // Borsa kapalı -> Bir önceki iş gününün 17:00'ı
+
+                LocalDate previousBusinessDay = currentDate.minusDays(1);
+
+                // Eğer önceki gün cumartesi ise, cuma gününe git
+                if (previousBusinessDay.getDayOfWeek() == DayOfWeek.SUNDAY)
+                {
+                    previousBusinessDay = previousBusinessDay.minusDays(2);
+                }
+                else if (previousBusinessDay.getDayOfWeek() == DayOfWeek.SATURDAY)
+                {
+                    previousBusinessDay = previousBusinessDay.minusDays(1);
+                }
+
+                latestDate = LocalDateTime.of(previousBusinessDay, LocalTime.of(17, 0));
+            }
+        }
+
         Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId)).orElseThrow(() -> new Exception("Portfolio not found"));
 
         Stock stock = stockRepository.findByTickerSymbol(tickerName).orElseThrow(() -> new Exception("Stock not found"));
@@ -56,7 +92,8 @@ public class PortfolioStockService
             throw new Exception("Stock is already added to the portfolio");
         }
 
-        if (quantity <= 0) {
+        if (quantity <= 0)
+        {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
 
@@ -66,13 +103,13 @@ public class PortfolioStockService
                 .quantity(quantity)
                 .build();
 
-       InvestmentActivity activity = new InvestmentActivity();
-       activity.setPortfolio(portfolio);
-       activity.setStock(stock);
-       activity.setStockQuantity(quantity);
-       activity.setDate(LocalDateTime.now());
-       activity.setActionType(InvestmentActivity.ActionType.OPEN);
-       activity.setOldPositionWeight(BigDecimal.ZERO);
+        InvestmentActivity activity = new InvestmentActivity();
+        activity.setPortfolio(portfolio);
+        activity.setStock(stock);
+        activity.setStockQuantity(quantity);
+        activity.setDate(LocalDateTime.now());
+        activity.setActionType(InvestmentActivity.ActionType.OPEN);
+        activity.setOldPositionWeight(BigDecimal.ZERO);
 
 
         portfolioStockRepository.save(portfolioStockModel);
@@ -91,8 +128,7 @@ public class PortfolioStockService
                 .build();
 
         portfolioStockMetricRepository.save(portfolioStockMetric);
-        PortfolioStockMetric portfolioStockMetricNew = portfolioStockMetricRepository.findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioId,stock.getStockId()).orElseThrow(() -> new Exception("Metrics not found"));
-
+        PortfolioStockMetric portfolioStockMetricNew = portfolioStockMetricRepository.findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioId, stock.getStockId()).orElseThrow(() -> new Exception("Metrics not found"));
 
         recalculatePositionWeights(portfolioId);
         activity.setNewPositionWeight(portfolioStockMetricNew.getPositionWeight());
@@ -138,7 +174,7 @@ public class PortfolioStockService
 
             activity.setPortfolio(portfolio);
             activity.setStock(stock);
-            activity.setStockQuantity(quantity-oldQuantity);
+            activity.setStockQuantity(quantity - oldQuantity);
             activity.setDate(LocalDateTime.now());
             activity.setActionType(InvestmentActivity.ActionType.BUY);
             activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
@@ -147,15 +183,15 @@ public class PortfolioStockService
         {
             activity.setPortfolio(portfolio);
             activity.setStock(stock);
-            activity.setStockQuantity(oldQuantity-quantity);
+            activity.setStockQuantity(oldQuantity - quantity);
             activity.setDate(LocalDateTime.now());
             activity.setActionType(InvestmentActivity.ActionType.SELL);
             activity.setOldPositionWeight(portfolioStockMetric.getPositionWeight());
-            recordTradeOnSell(portfolioId, stock.getStockId(), oldQuantity - quantity,avgCost,BigDecimal.valueOf(stock.getCurrentPrice()));
+            recordTradeOnSell(portfolioId, stock.getStockId(), oldQuantity - quantity, avgCost, BigDecimal.valueOf(stock.getCurrentPrice()));
 
         }
 
-        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)).subtract(BigDecimal.valueOf(100));
+        totalReturn = currentPrice.divide(avgCost, 2, BigDecimal.ROUND_HALF_UP).subtract(BigDecimal.ONE);
 
         portfolioStockModel.setQuantity(quantity);
         portfolioStockRepository.save(portfolioStockModel);
@@ -189,7 +225,7 @@ public class PortfolioStockService
         PortfolioStockModel portfolioStock = portfolioStockRepository
                 .findByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId())
                 .orElseThrow(() -> new Exception("Portfolio stock not found !"));
-        PortfolioStockMetric portfolioStockMetric = portfolioStockMetricRepository.findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioId,stock.getStockId()).orElseThrow(() -> new Exception("Metrics not found"));
+        PortfolioStockMetric portfolioStockMetric = portfolioStockMetricRepository.findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioId, stock.getStockId()).orElseThrow(() -> new Exception("Metrics not found"));
 
         boolean stockExistInPortfolioStock = portfolioStockRepository.existsByPortfolioAndStock(portfolio, stock);
         if (!stockExistInPortfolioStock)
@@ -209,16 +245,18 @@ public class PortfolioStockService
         portfolioStockRepository.deleteByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId());
         portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stock.getStockId());
 
-        recordTradeOnSell(portfolioId, stock.getStockId(), portfolioStockMetric.getQuantity(),portfolioStockMetric.getAverageCost(),BigDecimal.valueOf(stock.getCurrentPrice()));
+        recordTradeOnSell(portfolioId, stock.getStockId(), portfolioStockMetric.getQuantity(), portfolioStockMetric.getAverageCost(), BigDecimal.valueOf(stock.getCurrentPrice()));
         recalculatePositionWeights(portfolioId);
         return convertToResponseDTO(activity);
     }
 
     @Transactional
-    public void recalculatePositionWeights(Integer portfolioId) throws Exception {
+    public void recalculatePositionWeights(Integer portfolioId) throws Exception
+    {
         LocalDateTime latestDate = portfolioStockMetricRepository.findLatestDateByPortfolioId(portfolioId);
 
-        if (latestDate == null) {
+        if (latestDate == null)
+        {
             throw new Exception("No records found for the portfolio");
         }
 
@@ -228,22 +266,27 @@ public class PortfolioStockService
                 .map(metric -> metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalWeightedValue.compareTo(BigDecimal.ZERO) == 0) {
-            for (PortfolioStockMetric metric : metrics) {
+        if (totalWeightedValue.compareTo(BigDecimal.ZERO) == 0)
+        {
+            for (PortfolioStockMetric metric : metrics)
+            {
                 metric.setPositionWeight(BigDecimal.ZERO);
                 portfolioStockMetricRepository.save(metric);
             }
             return;
         }
 
-        for (PortfolioStockMetric metric : metrics) {
+        for (PortfolioStockMetric metric : metrics)
+        {
             BigDecimal weightedValue = metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity()));
             BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, 2, BigDecimal.ROUND_HALF_UP);
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
     }
-    private InvestmentActivityResponseDTO convertToResponseDTO(InvestmentActivity activity) {
+
+    private InvestmentActivityResponseDTO convertToResponseDTO(InvestmentActivity activity)
+    {
         return new InvestmentActivityResponseDTO(
                 activity.getActivityId(),
                 activity.getPortfolio().getPortfolioId(),
@@ -257,6 +300,7 @@ public class PortfolioStockService
                 activity.getNewPositionWeight()
         );
     }
+
     private void recordTradeOnSell(Integer portfolioId, Integer stockId, Double sellQuantity, BigDecimal averageCost, BigDecimal currentPrice) throws Exception
     {
         BigDecimal totalCost = averageCost.multiply(BigDecimal.valueOf(sellQuantity));
@@ -264,12 +308,13 @@ public class PortfolioStockService
 
         BigDecimal returnPercentage = BigDecimal.ZERO;
 
-        if (totalCost.compareTo(BigDecimal.ZERO) > 0) {
+        if (totalCost.compareTo(BigDecimal.ZERO) > 0)
+        {
             returnPercentage = totalRevenue.subtract(totalCost)
                     .divide(totalCost, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
         }
-        LocalDateTime entryDate = investmentActivityRepository.findTopByPortfolio_PortfolioIdAndStock_StockIdAndActionTypeOrderByDateDesc(portfolioId,stockId, InvestmentActivity.ActionType.OPEN).orElseThrow(()->new Exception("Investment activity not found")).getDate();
+        LocalDateTime entryDate = investmentActivityRepository.findTopByPortfolio_PortfolioIdAndStock_StockIdAndActionTypeOrderByDateDesc(portfolioId, stockId, InvestmentActivity.ActionType.OPEN).orElseThrow(() -> new Exception("Investment activity not found")).getDate();
         TradeMetrics trade = TradeMetrics.builder()
                 .portfolioId(portfolioId)
                 .stockId(stockId)
@@ -286,12 +331,18 @@ public class PortfolioStockService
         tradeMetricsRepository.save(trade);
         updateBestAndWorstTrade(portfolioId);
     }
-    public void updateBestAndWorstTrade(Integer portfolioId) {
+
+    public void updateBestAndWorstTrade(Integer portfolioId)
+    {
         List<TradeMetrics> trades = tradeMetricsRepository.findByPortfolioId(portfolioId);
 
-        if (trades.isEmpty()) return;
+        if (trades.isEmpty())
+        {
+            return;
+        }
 
-        for (TradeMetrics trade : trades) {
+        for (TradeMetrics trade : trades)
+        {
             trade.setIsBestTrade(false);
             trade.setIsWorstTrade(false);
         }
@@ -312,8 +363,14 @@ public class PortfolioStockService
                 .min(worstTradeComparator)
                 .orElse(null);
 
-        if (bestTrade != null) bestTrade.setIsBestTrade(true);
-        if (worstTrade != null) worstTrade.setIsWorstTrade(true);
+        if (bestTrade != null)
+        {
+            bestTrade.setIsBestTrade(true);
+        }
+        if (worstTrade != null)
+        {
+            worstTrade.setIsWorstTrade(true);
+        }
 
         tradeMetricsRepository.saveAll(trades);
     }
