@@ -22,13 +22,16 @@ public class PortfolioMetricController {
     public ResponseEntity<?> getPortfolioMetrics(@RequestParam(value = "portfolioId") Integer portfolioId) {
         try {
             if (portfolioId <= 0) {
-                return new ResponseEntity<>("Invalid portfolio ID", HttpStatus.BAD_REQUEST);
-            }
+                return ResponseEntity
+                        .badRequest()
+                        .body(new GenericResponse("error","Invalid Portfolio Id", null));            }
 
             PortfolioMetricResponse metrics = portfolioMetricService.getMetricsByPortfolioId(portfolioId);
             return ResponseEntity.ok(new GenericResponse("success", "Portfolio metrics retrieved successfully", metrics));
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity
+                    .badRequest()
+                    .body(new GenericResponse("error",e.getMessage(), null));
         }
     }
 }
