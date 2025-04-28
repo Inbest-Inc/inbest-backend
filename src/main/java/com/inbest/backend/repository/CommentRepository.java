@@ -9,7 +9,7 @@ import java.util.Set;
 public interface CommentRepository extends JpaRepository<Comment, Integer>
 {
 
-    @Query("select c from Comment c" +
-            " where c.post.id = :postId")
+    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId ORDER BY c.createdDate DESC")
     Set<Comment> findByPostId(Integer postId);
+
 }

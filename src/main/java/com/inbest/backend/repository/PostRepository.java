@@ -28,6 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Long>
             JOIN FETCH ia.stock s
             JOIN FETCH p.user u
             WHERE ia.portfolio.portfolioId = :portfolioId
+            ORDER BY p.createdAt DESC
             """)
     List<Post> findPostsByPortfolioId(@Param("portfolioId") Long portfolioId);
 }
