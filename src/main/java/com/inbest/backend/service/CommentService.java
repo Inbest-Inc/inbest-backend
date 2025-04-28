@@ -64,7 +64,8 @@ public class CommentService
                         comment.getUser().getId(),
                         comment.getComment(),
                         comment.getCreatedDate(),
-                        comment.getUser().getImageUrl()
+                        comment.getUser().getImageUrl(),
+                        comment.getUser().getName() + " " + comment.getUser().getSurname()
                 ))
                 .collect(Collectors.toSet());
     }

@@ -16,4 +16,5 @@ public class CommentResponseDTO
     private String comment;
     private LocalDateTime createdAt;
     private String imageUrl;
+    private String fullName;
 }
