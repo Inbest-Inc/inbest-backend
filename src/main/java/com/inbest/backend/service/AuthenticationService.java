@@ -32,8 +32,11 @@ public class AuthenticationService
 
     public AuthenticationResponse register(RegisterRequest request)
     {
-        if (repository.existsByUsername(request.getUsername()))
-        {
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        if (repository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username already exists");
         }
 
