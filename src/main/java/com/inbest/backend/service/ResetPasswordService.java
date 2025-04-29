@@ -31,6 +31,18 @@ public class ResetPasswordService
 
         User user = resetToken.getUser();
 
+        if (!password.getPassword().equals(password.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        if (passwordEncoder.matches(password.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password cannot be the same as current password");
+        }
+
+        if (passwordEncoder.matches(password.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password cannot be the same as current password");
+        }
+
         user.setPasswordHash(passwordEncoder.encode(password.getPassword()));
 
         userRepository.save(user);

@@ -2,6 +2,7 @@ package com.inbest.backend.controller;
 
 import com.inbest.backend.authentication.ResetPasswordRequest;
 import com.inbest.backend.service.ResetPasswordService;
+import jakarta.validation.Valid;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ public class ResetPasswordController
     private ResetPasswordService resetPasswordService;
 
     @PostMapping("/reset-password")
-    public ResponseEntity<Map<String, String>>  resetPassword(@RequestParam String token, @RequestBody ResetPasswordRequest password) {
+    public ResponseEntity<Map<String, String>>  resetPassword(@RequestParam String token, @Valid @RequestBody ResetPasswordRequest password) {
         Map<String, String> response = new HashMap<>();
         try {
             resetPasswordService.resetPassword(token, password);
