@@ -2,6 +2,7 @@ package com.inbest.backend.authentication;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +12,8 @@ import lombok.Setter;
 public class RegisterRequest {
 
     @NotBlank(message = "Username cannot be blank")
+    @Pattern(regexp = "^[a-z0-9_]+$",
+            message = "Username must be lowercase letters and numbers only, no spaces or special characters")
     @Size(min = 4, max = 100)
     private String username;
 
