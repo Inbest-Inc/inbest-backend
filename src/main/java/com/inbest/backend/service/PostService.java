@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public class PostService
                 .collect(Collectors.toList());
     }
 
-    public List<PostResponseDTO> getPostsFromFollowedUsers()
+    public List<PostResponseDTO> getPostsFromFollowedUsers(int page, int size)
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
@@ -77,7 +78,19 @@ public class PostService
                         .orElseThrow(() -> new UserNotFoundException("User not found")))
                 .collect(Collectors.toList());
 
-        return postRepository.findByUserInOrderByCreatedAtDesc(users).stream()
+        List<Post> posts = postRepository.findByUserInOrderByCreatedAtDesc(users);
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int startIndex = (page - 1) * size;
+        if (startIndex >= posts.size()) {
+            return new ArrayList<>();
+        }
+
+        return posts.stream()
+                .skip(startIndex)
+                .limit(size)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -138,11 +151,21 @@ public class PostService
         return baseScore * timeDecay;
     }
 
-    public List<PostResponseDTO> getTrendingPosts()
+    public List<PostResponseDTO> getTrendingPosts(int page, int size)
     {
-        return postRepository.findAllOrderByScoreDesc()
-                .stream()
-                .limit(10) //trend post size
+        List<Post> posts = postRepository.findAllOrderByScoreDesc();
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int startIndex = (page - 1) * size;
+        if (startIndex >= posts.size()) {
+            return new ArrayList<>();
+        }
+
+        return posts.stream()
+                .skip(startIndex)
+                .limit(size)
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -219,5 +242,25 @@ public class PostService
         return posts.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public long getTotalTrendingPostsCount() {
+        return postRepository.count();
+    }
+
+    public long getTotalFollowedPostsCount() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        List<FollowDTO> followedUsers = followService.getFollowing(username);
+        List<User> users = followedUsers.stream()
+                .map(followDTO -> userRepository.findByUsername(followDTO.getUsername())
+                        .orElseThrow(() -> new UserNotFoundException("User not found")))
+                .collect(Collectors.toList());
+
+        return postRepository.findByUserInOrderByCreatedAtDesc(users).size();
     }
 }

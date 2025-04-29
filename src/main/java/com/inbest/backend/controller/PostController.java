@@ -73,24 +73,43 @@ public class PostController
     }
 
     @GetMapping("/followed")
-    public ResponseEntity<?> getFollowedUsersPosts()
+    public ResponseEntity<?> getFollowedUsersPosts(
+            @RequestParam(defaultValue = "1") int page)
     {
+        if (page < 1) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Page number must be greater than 0"
+            ));
+        }
+
         try
         {
-            List<PostResponseDTO> followedPosts = postService.getPostsFromFollowedUsers();
+            List<PostResponseDTO> followedPosts = postService.getPostsFromFollowedUsers(page, 10);
+            long totalPosts = postService.getTotalFollowedPostsCount();
+            int totalPages = (int) Math.ceil((double) totalPosts / 10);
+            int nextPage = page + 1 <= totalPages ? page + 1 : -1;
 
             if (followedPosts.isEmpty())
             {
                 return ResponseEntity.status(200).body(Map.of(
                         "status", "success",
-                        "message", "No posts found from followed users"
+                        "message", "No posts found from followed users",
+                        "page", page,
+                        "totalPosts", totalPosts,
+                        "totalPages", totalPages,
+                        "nextPage", nextPage
                 ));
             }
 
             return ResponseEntity.status(200).body(Map.of(
                     "status", "success",
                     "message", "Posts from followed users fetched successfully",
-                    "data", followedPosts
+                    "data", followedPosts,
+                    "page", page,
+                    "totalPosts", totalPosts,
+                    "totalPages", totalPages,
+                    "nextPage", nextPage
             ));
         }
         catch (Exception e)
@@ -190,14 +209,29 @@ public class PostController
 
 
     @GetMapping("/trending")
-    public ResponseEntity<?> getTrendingPosts()
+    public ResponseEntity<?> getTrendingPosts(
+            @RequestParam(defaultValue = "1") int page)
     {
-        List<PostResponseDTO> trendingPosts = postService.getTrendingPosts();
+        if (page < 1) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Page number must be greater than 0"
+            ));
+        }
+
+        List<PostResponseDTO> trendingPosts = postService.getTrendingPosts(page, 10);
+        long totalPosts = postService.getTotalTrendingPostsCount();
+        int totalPages = (int) Math.ceil((double) totalPosts / 10);
+        int nextPage = page + 1 <= totalPages ? page + 1 : -1;
 
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", "Trending posts fetched successfully",
-                "data", trendingPosts
+                "data", trendingPosts,
+                "page", page,
+                "totalPosts", totalPosts,
+                "totalPages", totalPages,
+                "nextPage", nextPage
         ));
     }
 
