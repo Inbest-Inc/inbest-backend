@@ -92,11 +92,6 @@ public class AuthenticationService
         var user = repository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("Invalid username or password"));
 
-        if (!user.isVerified())
-        {
-            throw new IllegalStateException("Please verify your email before logging in.");
-        }
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
