@@ -22,7 +22,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("result", ex.getMessage()));
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "error");
+        response.put("message", ex.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(SignatureException.class)
@@ -49,3 +52,4 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage()));
     }
 }
+

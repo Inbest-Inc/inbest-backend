@@ -40,6 +40,10 @@ public class AuthenticationService
             throw new IllegalArgumentException("Username already exists");
         }
 
+        if (repository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
         var user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())

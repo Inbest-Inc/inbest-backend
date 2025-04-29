@@ -18,7 +18,10 @@ public class RegisterRequest {
     private String username;
 
     @NotBlank(message = "Email cannot be blank")
-    @Email(message = "Invalid email format")
+    @Pattern(
+            regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            message = "Invalid email format"
+    )
     private String email;
 
     @NotBlank(message = "Password cannot be blank")
