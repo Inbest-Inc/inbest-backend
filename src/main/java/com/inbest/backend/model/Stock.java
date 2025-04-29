@@ -26,6 +26,6 @@ public class Stock {
     @Column(name = "current_price", nullable = false)
     private Double currentPrice;
 
-    @Column(name = "created_date")
-    private LocalDateTime createdDate = LocalDateTime.now();
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
