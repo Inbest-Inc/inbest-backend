@@ -112,14 +112,9 @@ public class PortfolioService
 
     public PortfolioGetResponse getPortfolioById(int id)
     {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         Portfolio portfolio = portfolioRepository.findById((long) id)// Check ownership
-                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found or access denied"));
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
 
         return new PortfolioGetResponse(
                 portfolio.getPortfolioId(),
