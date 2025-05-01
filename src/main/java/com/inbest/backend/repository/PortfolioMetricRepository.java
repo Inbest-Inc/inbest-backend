@@ -5,10 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric, Integer>
-{
+public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric, Integer> {
 
     /**
      * Finds all metrics for a specific portfolio ID, ordered by last updated date in descending order
@@ -17,6 +17,18 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
      * @return List of portfolio metrics for the specified portfolio, with most recent first
      */
     List<PortfolioMetric> findByPortfolioIdOrderByLastUpdatedDateDesc(Integer portfolioId);
+
+    @Query(value = """
+            SELECT pm.*
+            FROM portfoliometrics pm
+            WHERE pm.portfolio_id = :portfolioId
+            AND pm.last_updated_date BETWEEN :startDate AND :endDate
+            ORDER BY pm.last_updated_date ASC
+            """, nativeQuery = true)
+    List<PortfolioMetric> findByPortfolioIdAndDateBetweenOrderByLastUpdatedDateAsc(
+            @Param("portfolioId") Integer portfolioId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     @Query(value = """
                 SELECT pm.*
