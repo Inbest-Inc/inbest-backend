@@ -118,8 +118,7 @@ public class PortfolioService
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Portfolio portfolio = portfolioRepository.findById((long) id)
-                .filter(p -> p.getUser().getId().equals(user.getId())) // Check ownership
+        Portfolio portfolio = portfolioRepository.findById((long) id)// Check ownership
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found or access denied"));
 
         return new PortfolioGetResponse(
