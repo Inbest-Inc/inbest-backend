@@ -60,6 +60,7 @@ public class CommentService
 
         return comments.stream()
                 .map(comment -> new CommentResponseDTO(
+                        comment.getId(),
                         comment.getUser().getUsername(),
                         comment.getUser().getId(),
                         comment.getComment(),
