@@ -74,7 +74,7 @@ public class UserService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
         return repository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found or access denied."));
     }
 
     public Integer getCurrentUserId() {

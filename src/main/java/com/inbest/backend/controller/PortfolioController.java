@@ -118,24 +118,29 @@ public class PortfolioController
     }
 
     @GetMapping("/get")
-    public ResponseEntity<?> getPortfolio(@RequestParam(value = "id", required = false) Integer id)
+    public ResponseEntity<GenericResponse> getPortfolio(
+            @RequestParam(value = "id", required = false) Integer id,
+            @RequestParam(value = "username", required = false) String username)
     {
         try
         {
-            if (id != null)
+            if (id != null && username != null)
             {
-                PortfolioGetResponse portfolio = portfolioService.getPortfolioById(id);
+                PortfolioGetResponse portfolio = portfolioService.getPortfolioById(id, username);
                 return ResponseEntity.ok(new GenericResponse("success", "Portfolio retrieved successfully", portfolio));
             }
             else
             {
-                List<PortfolioGetResponse> portfolios = portfolioService.getAllPortfolios();
-                return ResponseEntity.ok(new GenericResponse("success", "Portfolios retrieved successfully", portfolios));
+                return new ResponseEntity<>(new GenericResponse("error", "Both id and username parameters are required when querying a specific portfolio", null), HttpStatus.BAD_REQUEST);
             }
+        }
+        catch (SecurityException e)
+        {
+            return new ResponseEntity<>(new GenericResponse("error", e.getMessage(), null), HttpStatus.FORBIDDEN);
         }
         catch (Exception e)
         {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new GenericResponse("error", e.getMessage(), null), HttpStatus.BAD_REQUEST);
         }
     }
 

@@ -23,10 +23,16 @@ import java.util.stream.Collectors;
 @Service
 public class PortfolioService
 {
+    private final UserService userService;
     @Autowired
     private PortfolioRepository portfolioRepository;
     @Autowired
     private UserRepository userRepository;
+
+    public PortfolioService(UserService userService) {
+        this.userService = userService;
+    }
+
 
     public boolean doesPortfolioNameExist(String portfolioName)
     {
@@ -110,11 +116,22 @@ public class PortfolioService
         portfolioRepository.delete(portfolio);
     }
 
-    public PortfolioGetResponse getPortfolioById(int id)
+    public PortfolioGetResponse getPortfolioById(int id, String username)
     {
-
-        Portfolio portfolio = portfolioRepository.findById((long) id)// Check ownership
+        Portfolio portfolio = portfolioRepository.findById((long) id)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
+
+        // Check if the portfolio belongs to the specified user
+        if (!portfolio.getUser().getUsername().equals(username)) {
+            throw new SecurityException("This portfolio is not owned by user " +  username);
+        }
+
+        if ("PRIVATE".equalsIgnoreCase(portfolio.getVisibility())) {
+            Integer currentUserId = userService.getCurrentUserId();
+            if (!portfolio.getUser().getId().equals(currentUserId)) {
+                throw new SecurityException("Access denied: Portfolio is private and you are not the owner.");
+            }
+        }
 
         return new PortfolioGetResponse(
                 portfolio.getPortfolioId(),
@@ -125,7 +142,6 @@ public class PortfolioService
                 portfolio.getUser().getId()
         );
     }
-
 
     public List<PortfolioGetResponse> getAllPortfolios()
     {
