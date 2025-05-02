@@ -96,26 +96,25 @@ public class PortfolioController
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deletePortfolio(@PathVariable Integer id)
-    {
-        if (id == null || id <= 0)
-        {
-            return new ResponseEntity<>("Invalid ID", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<GenericResponse> deletePortfolio(@PathVariable Integer id) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body(
+                    new GenericResponse("error", "Invalid ID", null)
+            );
         }
 
-        try
-        {
+        try {
             portfolioService.deletePortfolio(id);
-            return new ResponseEntity<>(new HashMap<String, String>()
-            {{
-                put("status", "deleted");
-            }}, HttpStatus.OK);
-        }
-        catch (Exception e)
-        {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.ok(
+                    new GenericResponse("success", "Portfolio deleted successfully", null)
+            );
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(
+                    new GenericResponse("error", e.getMessage(), null)
+            );
         }
     }
+
 
     @GetMapping("/get")
     public ResponseEntity<GenericResponse> getPortfolio(

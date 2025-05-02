@@ -109,10 +109,15 @@ public class PortfolioService
         portfolioRepository.save(existingPortfolio);
     }
 
-    public void deletePortfolio(int id)
-    {
+    public void deletePortfolio(int id) {
         Portfolio portfolio = portfolioRepository.findById((long) id)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found!"));
+
+        Integer currentUserId = userService.getCurrentUserId();
+        if (!portfolio.getUser().getId().equals(currentUserId)) {
+            throw new SecurityException("You are not authorized to delete this portfolio.");
+        }
+
         portfolioRepository.delete(portfolio);
     }
 
