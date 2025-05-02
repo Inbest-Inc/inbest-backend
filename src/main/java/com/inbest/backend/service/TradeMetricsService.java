@@ -50,7 +50,7 @@ public class TradeMetricsService {
     public TradeMetricsResponseDTO getPortfolioBestTrade(Integer portfolioId) {
         TradeMetrics bestTrade = tradeMetricsRepository.findTopByPortfolioIdAndIsBestTradeTrue(portfolioId);
         if (bestTrade == null) {
-            throw new NoSuchElementException("No best trade found for portfolio with ID: " + portfolioId);
+            throw new NoSuchElementException("No best trade found. This portfolio has no recorded sales yet.");
         }
         return toDTO(bestTrade);
     }
@@ -58,7 +58,7 @@ public class TradeMetricsService {
     public TradeMetricsResponseDTO getPortfolioWorstTrade(Integer portfolioId) {
         TradeMetrics worstTrade = tradeMetricsRepository.findTopByPortfolioIdAndIsWorstTradeTrue(portfolioId);
         if (worstTrade == null) {
-            throw new NoSuchElementException("No worst trade found for portfolio with ID: " + portfolioId);
+            throw new NoSuchElementException("No worst trade found. This portfolio has no recorded sales yet.");
         }
         return toDTO(worstTrade);
     }
