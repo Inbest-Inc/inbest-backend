@@ -59,7 +59,7 @@ public class PostService
 
     public List<PostResponseDTO> getAllPosts()
     {
-        return postRepository.findAll().stream()
+        return postRepository.findAllPublicPosts().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -153,7 +153,7 @@ public class PostService
 
     public List<PostResponseDTO> getTrendingPosts(int page, int size)
     {
-        List<Post> posts = postRepository.findAllOrderByScoreDesc();
+        List<Post> posts = postRepository.findAllPublicOrderByScoreDesc();
         if (posts.isEmpty()) {
             return new ArrayList<>();
         }

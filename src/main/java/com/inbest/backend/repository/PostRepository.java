@@ -14,8 +14,13 @@ public interface PostRepository extends JpaRepository<Post, Long>
 {
     List<Post> findByUser(User user);
 
-    @Query("SELECT p FROM Post p ORDER BY p.trendScore DESC")
-    List<Post> findAllOrderByScoreDesc();
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.investmentActivity.portfolio.visibility = 'public'
+    ORDER BY p.trendScore DESC
+    """)
+    List<Post> findAllPublicOrderByScoreDesc();
+
 
     List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
 
@@ -31,4 +36,10 @@ public interface PostRepository extends JpaRepository<Post, Long>
             ORDER BY p.createdAt DESC
             """)
     List<Post> findPostsByPortfolioId(@Param("portfolioId") Long portfolioId);
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.investmentActivity.portfolio.visibility = 'public'
+    ORDER BY p.createdAt DESC
+    """)
+    List<Post> findAllPublicPosts();
 }
