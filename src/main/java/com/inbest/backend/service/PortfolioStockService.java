@@ -311,8 +311,7 @@ public class PortfolioStockService
         if (totalCost.compareTo(BigDecimal.ZERO) > 0)
         {
             returnPercentage = totalRevenue.subtract(totalCost)
-                    .divide(totalCost, 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
+                    .divide(totalCost, 4, RoundingMode.HALF_UP);
         }
         LocalDateTime entryDate = investmentActivityRepository.findTopByPortfolio_PortfolioIdAndStock_StockIdAndActionTypeOrderByDateDesc(portfolioId, stockId, InvestmentActivity.ActionType.OPEN).orElseThrow(() -> new Exception("Investment activity not found")).getDate();
 
