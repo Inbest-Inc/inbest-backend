@@ -315,9 +315,16 @@ public class PortfolioStockService
                     .multiply(BigDecimal.valueOf(100));
         }
         LocalDateTime entryDate = investmentActivityRepository.findTopByPortfolio_PortfolioIdAndStock_StockIdAndActionTypeOrderByDateDesc(portfolioId, stockId, InvestmentActivity.ActionType.OPEN).orElseThrow(() -> new Exception("Investment activity not found")).getDate();
+
+        Stock stock = stockRepository.findById(Long.valueOf(stockId))
+                .orElseThrow(() -> new Exception("Stock not found"));
+        Portfolio portfolio = portfolioRepository.findById(Long.valueOf(portfolioId))
+                .orElseThrow(() -> new Exception("Portfolio not found"));
+
         TradeMetrics trade = TradeMetrics.builder()
                 .portfolioId(portfolioId)
-                .stockId(stockId)
+                .stockId(stock.getStockId())
+                .stock(stock)
                 .averageCost(averageCost)
                 .entryDate(entryDate)
                 .exitPrice(currentPrice)
@@ -326,7 +333,11 @@ public class PortfolioStockService
                 .totalReturn(returnPercentage)
                 .isBestTrade(false)
                 .isWorstTrade(false)
+                .portfolio(portfolio)
                 .build();
+
+
+        trade.setPortfolio(portfolio);
 
         tradeMetricsRepository.save(trade);
         updateBestAndWorstTrade(portfolioId);

@@ -51,4 +51,13 @@ public class TradeMetrics {
 
     @Column(name = "last_updated", insertable = false, updatable = false)
     private LocalDateTime lastUpdated;
+
+    // ✅ Relationships
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id", referencedColumnName = "stock_id", insertable = false, updatable = false)
+    private Stock stock;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "portfolio_id", referencedColumnName = "portfolio_id", insertable = false, updatable = false)
+    private Portfolio portfolio;
 }
