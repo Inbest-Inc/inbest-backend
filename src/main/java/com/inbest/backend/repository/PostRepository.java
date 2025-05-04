@@ -15,12 +15,10 @@ public interface PostRepository extends JpaRepository<Post, Long>
     List<Post> findByUser(User user);
 
     @Query("""
-    SELECT p FROM Post p
-    JOIN FETCH p.investmentActivity ia
-    JOIN FETCH ia.portfolio po
-    WHERE po.visibility = 'public'
-    ORDER BY p.trendScore DESC
-    """)
+                 SELECT p FROM Post p
+                 WHERE p.investmentActivity.portfolio.visibility = 'public'
+                 ORDER BY p.trendScore DESC
+            """)
     List<Post> findAllPublicOrderByScoreDesc();
 
 
