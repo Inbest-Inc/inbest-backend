@@ -5,8 +5,10 @@ import com.inbest.backend.model.position.PortfolioMetric;
 import com.inbest.backend.model.response.PortfolioGetResponse;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
+import com.inbest.backend.model.response.PortfolioRankResponse;
 import com.inbest.backend.repository.PortfolioRepository;
 import com.inbest.backend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -198,5 +201,20 @@ public class PortfolioService
                 portfolio.getVisibility(),
                 portfolio.getUser().getId()
         )).collect(Collectors.toList());
+    }
+
+    public PortfolioRankResponse getPortfolioRank(int portfolioId)
+    {
+        Map<String, Object> result = portfolioRepository.findPortfolioRankAndTotal(portfolioId);
+
+        if (result == null || result.isEmpty())
+        {
+            throw new EntityNotFoundException("Portfolio not found or has no total_return data.");
+        }
+
+        return new PortfolioRankResponse(
+                (Integer) result.get("portfolio_rank"),
+                ((Number) result.get("total_portfolios")).intValue()
+        );
     }
 }

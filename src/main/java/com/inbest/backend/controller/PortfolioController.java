@@ -3,6 +3,7 @@ package com.inbest.backend.controller;
 import com.inbest.backend.dto.PortfolioDTO;
 import com.inbest.backend.model.response.PortfolioGetResponse;
 import com.inbest.backend.model.response.GenericResponse;
+import com.inbest.backend.model.response.PortfolioRankResponse;
 import com.inbest.backend.model.response.PortfolioResponse;
 import com.inbest.backend.service.PortfolioService;
 import lombok.RequiredArgsConstructor;
@@ -154,5 +155,19 @@ public class PortfolioController
         {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @GetMapping("/{portfolioId}/rank")
+    public ResponseEntity<GenericResponse> getPortfolioRank(@PathVariable int portfolioId)
+    {
+        PortfolioRankResponse response = portfolioService.getPortfolioRank(portfolioId);
+
+        GenericResponse genericResponse = new GenericResponse(
+                "success",
+                "Portfolio ranking fetched successfully.",
+                response
+        );
+
+        return ResponseEntity.ok(genericResponse);
     }
 }

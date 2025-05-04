@@ -53,7 +53,8 @@ public class SecurityConfig {
                                 "/actuator/**",
                                 "/api/hikari-monitor/**",
                                 "/api/portfolio/get",
-                                "/api/trade/**"
+                                "/api/trade/**",
+                                "/api/portfolio/{portfolioId}/rank"
 
 
 
