@@ -45,8 +45,8 @@ public class PortfolioStockMetricService
                                     map.put("name", stock.getStock().getStockName());
                                     map.put("shares", metric.getQuantity());
                                     map.put("allocation", metric.getPositionWeight());
-                                    map.put("averagePrice", metric.getAverageCost());
-                                    map.put("currentPrice", metric.getCurrentValue());
+                                    map.put("averageprice", metric.getAverageCost());
+                                    map.put("currentprice", metric.getCurrentValue());
                                     map.put("return", metric.getTotalReturn());
                                     return map;
                                 })
