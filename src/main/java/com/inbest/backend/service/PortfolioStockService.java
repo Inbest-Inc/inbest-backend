@@ -243,7 +243,7 @@ public class PortfolioStockService
 
         investmentActivityRepository.save(activity);
         portfolioStockRepository.deleteByPortfolio_PortfolioIdAndStock_StockId(portfolioId, stock.getStockId());
-        portfolioStockMetricRepository.deleteByPortfolioIdAndStockId(portfolioId, stock.getStockId());
+        portfolioStockMetricRepository.deleteByPortfolioIdAndStockIdAndDate(portfolioId, stock.getStockId(),latestDate);
 
         recordTradeOnSell(portfolioId, stock.getStockId(), portfolioStockMetric.getQuantity(), portfolioStockMetric.getAverageCost(), BigDecimal.valueOf(stock.getCurrentPrice()));
         recalculatePositionWeights(portfolioId);
