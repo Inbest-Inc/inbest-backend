@@ -6,6 +6,7 @@ import com.inbest.backend.model.response.PortfolioGetResponse;
 import com.inbest.backend.model.Portfolio;
 import com.inbest.backend.model.User;
 import com.inbest.backend.model.response.PortfolioRankResponse;
+import com.inbest.backend.repository.PortfolioMetricRepository;
 import com.inbest.backend.repository.PortfolioRepository;
 import com.inbest.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +30,8 @@ public class PortfolioService
     private final UserService userService;
     @Autowired
     private PortfolioRepository portfolioRepository;
+    @Autowired
+    private PortfolioMetricRepository portfolioMetricRepository;
     @Autowired
     private UserRepository userRepository;
 
@@ -77,6 +80,8 @@ public class PortfolioService
         portfolioMetric.setTotalReturn(BigDecimal.ZERO);
         portfolioMetric.setRiskScore(BigDecimal.ZERO);
         portfolioMetric.setRiskCategory("Conservative");
+        portfolioMetricRepository.save(portfolioMetric);
+
         return insertedPortfolio.getPortfolioId();
     }
 
