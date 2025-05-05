@@ -31,8 +31,6 @@ public class PortfolioStockMetricService
         String username = auth.getName();
 
         Optional<User> user = userRepository.findByUsername(username);
-        if(portfolioService.checkPortfolioVisibility(portfolioID))
-        {
             List<PortfolioStockModel> stocks = portfolioStockRepository.findByPortfolio_PortfolioId((long) portfolioID);
             return stocks.stream()
                     .map(stock -> {
@@ -62,12 +60,10 @@ public class PortfolioStockMetricService
                     })
                     .filter(Objects::nonNull)
                     .toList();
-        }
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", "error");
-        map.put("message", "Portfolio is not public.");
+    }
 
-        return (List<Map<String, Object>>) map;
+    public List<Map<String, Object>> getDailyMetrics(int portfolioID) {
+            return portfolioStockMetricRepository.findDailyMetricsByPortfolioId(portfolioID);
     }
 
 }

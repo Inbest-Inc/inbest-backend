@@ -42,4 +42,26 @@ public class PortfolioStockMetricController
                     .body(Map.of("error", "Internal Server Error", "message", e.getMessage()));
         }
     }
+
+    @GetMapping("/daily/{portfolioId}")
+    public ResponseEntity<?> getDailyMetrics(@PathVariable int portfolioId) {
+        try {
+            List<Map<String, Object>> data = portfolioStockMetricService.getDailyMetrics(portfolioId);
+
+            if (data.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("status", "error", "message", "No daily metrics found for this portfolio."));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Daily metrics retrieved successfully.",
+                    "daily_metrics", data
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", "Internal Server Error: " + e.getMessage()));
+        }
+    }
 }
