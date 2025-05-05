@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.*;
@@ -279,7 +280,7 @@ public class PortfolioStockService
         for (PortfolioStockMetric metric : metrics)
         {
             BigDecimal weightedValue = metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity()));
-            BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, MathContext.DECIMAL128);
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
