@@ -73,7 +73,7 @@ public interface PortfolioStockMetricRepository extends JpaRepository<PortfolioS
     @Query("SELECT psm FROM PortfolioStockMetric psm WHERE psm.portfolioId = :portfolioId AND psm.date = :date")
     List<PortfolioStockMetric> findByPortfolioIdAndDate(@Param("portfolioId") Integer portfolioId, @Param("date") LocalDateTime date);
 
-    @Query(value = "SELECT s.ticker_symbol AS symbol, pm.total_return * 100 AS return, pm.date AS date " +
+    @Query(value = "SELECT s.ticker_symbol AS symbol, pm.total_return AS return, pm.date AS date " +
             "FROM positionmetrics pm " +
             "JOIN stock s ON pm.stock_id = s.stock_id " +
             "WHERE pm.portfolio_id = :portfolioId " +
