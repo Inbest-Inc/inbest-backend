@@ -26,8 +26,8 @@ public interface PortfolioRepository extends JpaRepository<Portfolio, Long>
             FROM (
                 SELECT
                     p.portfolio_id,
-                    RANK() OVER (ORDER BY pm.total_return DESC) AS portfolio_rank,
-                    COUNT(*) OVER () AS total_portfolios
+                    RANK() OVER (ORDER BY pm.total_return DESC)::integer AS portfolio_rank,
+                    COUNT(*) OVER ()::integer AS total_portfolios
                 FROM portfolio p
                 JOIN (
                     SELECT DISTINCT ON (portfolio_id) *
