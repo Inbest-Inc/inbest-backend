@@ -1,16 +1,13 @@
 package com.inbest.backend.service;
 
 import com.inbest.backend.model.Portfolio;
+import com.inbest.backend.model.PortfolioMetricsWeightedReturnView;
 import com.inbest.backend.model.Stock;
 import com.inbest.backend.model.User;
 import com.inbest.backend.model.position.PortfolioMetric;
 import com.inbest.backend.model.response.PortfolioReturnResponse;
 import com.inbest.backend.model.response.PortfolioMetricResponse;
-import com.inbest.backend.repository.PortfolioMetricRepository;
-import com.inbest.backend.repository.PortfolioRepository;
-import com.inbest.backend.repository.StockPriceRepository;
-import com.inbest.backend.repository.StockRepository;
-import com.inbest.backend.repository.UserRepository;
+import com.inbest.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +29,7 @@ import java.util.Optional;
 public class PortfolioMetricService {
 
     private final PortfolioMetricRepository portfolioMetricRepository;
+    private final PortfolioMetricsWeightedReturnViewRepository portfolioMetricsWeightedReturnViewRepository;
     private final PortfolioRepository portfolioRepository;
     private final UserRepository userRepository;
     private final StockRepository stockRepository;
@@ -84,20 +82,40 @@ public class PortfolioMetricService {
         // Get only the latest metric
         PortfolioMetric latestMetric = metrics.get(0);
 
-        // Create a new PortfolioMetrics object without portfolioValue
-        PortfolioMetricResponse response = PortfolioMetricResponse.builder()
-                .portfolioId(latestMetric.getPortfolioId())
-                .hourlyReturn(latestMetric.getHourlyReturn())
-                .dailyReturn(latestMetric.getDailyReturn())
-                .monthlyReturn(latestMetric.getMonthlyReturn())
-                .totalReturn(latestMetric.getTotalReturn())
-                .beta(latestMetric.getBeta())
-                .sharpeRatio(latestMetric.getSharpeRatio())
-                .volatility(latestMetric.getVolatility())
-                .riskScore(latestMetric.getRiskScore())
-                .riskCategory(latestMetric.getRiskCategory())
-                .build();
+        Optional<PortfolioMetricsWeightedReturnView> weightedMetricsOptional = portfolioMetricsWeightedReturnViewRepository.findByPortfolioId(portfolioId);
+        PortfolioMetricResponse response = null;
+        if (weightedMetricsOptional.isPresent())
+        {
+            PortfolioMetricsWeightedReturnView weightedMetrics = weightedMetricsOptional.get();
 
+            response = PortfolioMetricResponse.builder()
+                    .portfolioId(latestMetric.getPortfolioId())
+                    .hourlyReturn(weightedMetrics.getHourlyReturn())
+                    .dailyReturn(weightedMetrics.getDailyReturn())
+                    .monthlyReturn(weightedMetrics.getMonthlyReturn())
+                    .totalReturn(weightedMetrics.getTotalReturn())
+                    .beta(latestMetric.getBeta())
+                    .sharpeRatio(latestMetric.getSharpeRatio())
+                    .volatility(latestMetric.getVolatility())
+                    .riskScore(latestMetric.getRiskScore())
+                    .riskCategory(latestMetric.getRiskCategory())
+                    .build();
+        }
+        else {
+            // Create a new PortfolioMetrics object without portfolioValue
+            response = PortfolioMetricResponse.builder()
+                    .portfolioId(latestMetric.getPortfolioId())
+                    .hourlyReturn(latestMetric.getHourlyReturn())
+                    .dailyReturn(latestMetric.getDailyReturn())
+                    .monthlyReturn(latestMetric.getMonthlyReturn())
+                    .totalReturn(latestMetric.getTotalReturn())
+                    .beta(latestMetric.getBeta())
+                    .sharpeRatio(latestMetric.getSharpeRatio())
+                    .volatility(latestMetric.getVolatility())
+                    .riskScore(latestMetric.getRiskScore())
+                    .riskCategory(latestMetric.getRiskCategory())
+                    .build();
+        }
         return response;
     }
 
