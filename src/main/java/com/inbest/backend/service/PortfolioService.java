@@ -156,6 +156,16 @@ public class PortfolioService
         );
     }
 
+    public boolean checkPortfolioVisibility(int id) {
+        Portfolio portfolio = portfolioRepository.findById((long) id)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
+
+        if("PRIVATE".equalsIgnoreCase(portfolio.getVisibility())){
+            return false;
+        }
+        return true;
+    }
+
     public List<PortfolioGetResponse> getAllPortfolios()
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

@@ -31,40 +31,43 @@ public class PortfolioStockMetricService
         String username = auth.getName();
 
         Optional<User> user = userRepository.findByUsername(username);
-        if (user.isPresent()) {
-            if (portfolioService.checkPortfolioOwnership(portfolioID, user.get().getId())) {
+        if(portfolioService.checkPortfolioVisibility(portfolioID))
+        {
+            List<PortfolioStockModel> stocks = portfolioStockRepository.findByPortfolio_PortfolioId((long) portfolioID);
+            return stocks.stream()
+                    .map(stock -> {
+                        Optional<PortfolioStockMetric> metricOpt = portfolioStockMetricRepository
+                                .findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioID, stock.getStock().getStockId());
 
-                List<PortfolioStockModel> stocks = portfolioStockRepository.findByPortfolio_PortfolioId((long) portfolioID);
-                return stocks.stream()
-                        .map(stock -> {
-                            Optional<PortfolioStockMetric> metricOpt = portfolioStockMetricRepository
-                                    .findTopByPortfolioIdAndStockIdOrderByDateDesc(portfolioID, stock.getStock().getStockId());
-
-                            if (metricOpt.isPresent()) {
-                                PortfolioStockMetric metric = metricOpt.get();
-                                Map<String, Object> map = new HashMap<>();
-                                map.put("stock_id", metric.getStockId());
-                                map.put("symbol", stock.getStock().getTickerSymbol());
-                                map.put("name", stock.getStock().getStockName());
-                                map.put("shares", metric.getQuantity());
-                                map.put("allocation", metric.getPositionWeight());
-                                map.put("averageprice", metric.getAverageCost());
-                                map.put("currentprice", metric.getCurrentValue());
-                                map.put("return", metric.getTotalReturn());
-                                Optional<LocalDateTime> openDate = investmentActivityRepository
-                                        .findLatestOpenDateByPortfolioIdAndStockId(
-                                                (long) portfolioID,
-                                                Long.valueOf(stock.getStock().getStockId()));
-                                map.put("open_date", openDate.orElse(null));
-                                return map;
-                            }
-                            return null;
-                        })
-                        .filter(Objects::nonNull)
-                        .toList();
-            }
+                        if (metricOpt.isPresent())
+                        {
+                            PortfolioStockMetric metric = metricOpt.get();
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("stock_id", metric.getStockId());
+                            map.put("symbol", stock.getStock().getTickerSymbol());
+                            map.put("name", stock.getStock().getStockName());
+                            map.put("shares", metric.getQuantity());
+                            map.put("allocation", metric.getPositionWeight());
+                            map.put("averageprice", metric.getAverageCost());
+                            map.put("currentprice", metric.getCurrentValue());
+                            map.put("return", metric.getTotalReturn());
+                            Optional<LocalDateTime> openDate = investmentActivityRepository
+                                    .findLatestOpenDateByPortfolioIdAndStockId(
+                                            (long) portfolioID,
+                                            Long.valueOf(stock.getStock().getStockId()));
+                            map.put("open_date", openDate.orElse(null));
+                            return map;
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
         }
-        return portfolioStockMetricRepository.findMetricsByPortfolioIdIfPublic(portfolioID);
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "error");
+        map.put("message", "Portfolio is not public.");
+
+        return (List<Map<String, Object>>) map;
     }
 
 }
