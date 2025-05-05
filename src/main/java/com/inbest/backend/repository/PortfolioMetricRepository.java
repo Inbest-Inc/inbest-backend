@@ -32,15 +32,15 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
 
     @Query(value = """
                 SELECT pm.*
-                        FROM (
-                                 SELECT DISTINCT ON (pm.portfolio_id) pm.*
-                                 FROM portfoliometrics pm
+                                 FROM (
+                                          SELECT DISTINCT ON (pm.portfolio_id) pm.*
+                                          FROM portfoliometrics pm
                                           JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
-                                 WHERE p.visibility = 'public'
-                                 ORDER BY pm.portfolio_id, pm.daily_return DESC
-                             ) pm
-                        ORDER BY pm.total_return DESC
-                        LIMIT 10;
+                                          WHERE p.visibility = 'public'
+                                          ORDER BY pm.portfolio_id, pm.last_updated_date DESC
+                                      ) pm
+                                 ORDER BY pm.total_return DESC
+                                 LIMIT 10;
             
             """, nativeQuery = true)
     List<PortfolioMetric> findTop10ByTotalReturnForPublic();
@@ -52,7 +52,7 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
                      FROM portfoliometrics pm
                               JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
                      WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.daily_return DESC
+                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
                  ) pm
             ORDER BY pm.daily_return DESC
             LIMIT 10;
@@ -67,7 +67,7 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
                      FROM portfoliometrics pm
                               JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
                      WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.daily_return DESC
+                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
                  ) pm
             ORDER BY pm.monthly_return DESC
             LIMIT 10;
@@ -82,7 +82,7 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
                      FROM portfoliometrics pm
                               JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
                      WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.daily_return DESC
+                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
                  ) pm
             ORDER BY pm.hourly_return DESC
             LIMIT 10;
