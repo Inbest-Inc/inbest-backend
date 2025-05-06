@@ -77,7 +77,7 @@ public class S3Service implements FileService
             String contentType = multipartFile.getContentType();
             if (!allowedTypes.contains(contentType))
             {
-                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, PNG, GIF, WEBP are allowed.", null, null);
+                return new FileUploadResponseDTO("error", "Invalid file type. Only JPG, PNG, GIF, WEBP are allowed.", null, null);
             }
 
             if (multipartFile.getSize() > maxSize)
