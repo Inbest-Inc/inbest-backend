@@ -63,8 +63,8 @@ public class S3Service implements FileService
     {
         int userId = authenticationService.authenticate_user();
 
-        Set<String> allowedTypes = Set.of("image/png", "image/jpg", "image/gif", "image/webp");
-        Set<String> allowedExtensions = Set.of("jpg", "png", "gif", "webp");
+        Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/jpg", "image/gif", "image/webp");
+        Set<String> allowedExtensions = Set.of("jpg","jpeg", "png", "gif", "webp");
         long maxSize = 5 * 1024 * 1024;
 
         try
@@ -77,7 +77,7 @@ public class S3Service implements FileService
             String contentType = multipartFile.getContentType();
             if (!allowedTypes.contains(contentType))
             {
-                return new FileUploadResponseDTO("error", "Invalid file type. Only JPG, PNG, GIF, WEBP are allowed.", null, null);
+                return new FileUploadResponseDTO("error", "Invalid file type. Only JPEG, JPG, PNG, GIF, WEBP are allowed.", null, null);
             }
 
             if (multipartFile.getSize() > maxSize)
