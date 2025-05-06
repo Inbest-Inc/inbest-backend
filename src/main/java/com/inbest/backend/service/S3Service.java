@@ -63,8 +63,8 @@ public class S3Service implements FileService
     {
         int userId = authenticationService.authenticate_user();
 
-        Set<String> allowedTypes = Set.of("image/jpeg", "image/png", "image/jpg", "image/gif", "image/webp");
-        Set<String> allowedExtensions = Set.of("jpeg", "jpg", "png", "gif", "webp");
+        Set<String> allowedTypes = Set.of("image/png", "image/jpg", "image/gif", "image/webp");
+        Set<String> allowedExtensions = Set.of("jpg", "png", "gif", "webp");
         long maxSize = 5 * 1024 * 1024;
 
         try
