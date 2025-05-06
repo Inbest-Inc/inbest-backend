@@ -1,5 +1,6 @@
 package com.inbest.backend.model;
 
+import com.inbest.backend.model.position.PortfolioStockMetricId;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,17 +13,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@IdClass(StockPriceId.class)  // Composite Key kullanımı için
 public class StockPrice {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
+    @Id
     @Column(name = "ticker_symbol", nullable = false)
     private String tickerSymbol;
+
+    @Id
+    @Column(name = "date", nullable = false)
+    private LocalDateTime date;
 
     @Column(name = "price", nullable = false)
     private BigDecimal price;
 
-    @Column(name = "date", nullable = false)
-    private LocalDateTime date;
-} 
+}

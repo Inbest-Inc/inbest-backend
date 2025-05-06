@@ -1,9 +1,7 @@
 package com.inbest.backend.service;
 
-import com.inbest.backend.model.Portfolio;
-import com.inbest.backend.model.PortfolioMetricsWeightedReturnView;
-import com.inbest.backend.model.Stock;
-import com.inbest.backend.model.User;
+import com.inbest.backend.dto.PortfolioReturnDTO;
+import com.inbest.backend.model.*;
 import com.inbest.backend.model.position.PortfolioMetric;
 import com.inbest.backend.model.response.PortfolioReturnResponse;
 import com.inbest.backend.model.response.PortfolioMetricResponse;
@@ -15,14 +13,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +29,7 @@ public class PortfolioMetricService {
     private final UserRepository userRepository;
     private final StockRepository stockRepository;
     private final StockPriceRepository stockPriceRepository;
+    private final PortfolioReturnsViewRepository portfolioReturnsViewRepository;
 
     /**
      * Retrieves portfolio metrics for a specific portfolio ID with visibility check.
@@ -332,5 +328,77 @@ public class PortfolioMetricService {
 
         return response;
     }
+
+    public List<PortfolioReturnDTO> getPortfolioReturns(Integer portfolioId) {
+        // 1. Portföy verilerini al
+        List<Object[]> rows = portfolioReturnsViewRepository.findPortfolioReturns(portfolioId);
+
+        if (rows.isEmpty()) {
+            return Collections.emptyList(); // Hiç veri yoksa boş dön
+        }
+
+        // 2. DTO'ya dönüştür ve sırala
+        List<PortfolioReturnDTO> allData = rows.stream()
+                .map(row -> new PortfolioReturnDTO(
+                        ((Timestamp) row[1]).toLocalDateTime(),
+                        ((BigDecimal) row[2])
+                ))
+                .sorted(Comparator.comparing(PortfolioReturnDTO::getDate))
+                .collect(Collectors.toList());
+
+        // 3. Portföyün başlangıç tarihini belirle
+        LocalDateTime portfolioStartDate = allData.get(0).getDate();
+
+        // 4. SPY ve GOLD başlangıç fiyatlarını al
+        BigDecimal spyRefPrice = getStockPriceAtDate("SPY", portfolioStartDate);
+        BigDecimal goldRefPrice = getStockPriceAtDate("GC=F", portfolioStartDate);
+
+        // 5. SPY ve GOLD normalize edilmiş verileri hesapla ve DTO listesine ekle
+        List<PortfolioReturnDTO> finalData = allData.stream()
+                .map(dto -> {
+                    BigDecimal spyReturn = getNormalizedReturn("SPY", dto.getDate(), spyRefPrice);
+                    BigDecimal goldReturn = getNormalizedReturn("GC=F", dto.getDate(), goldRefPrice);
+                    return new PortfolioReturnDTO(dto.getDate(), dto.getPortfolioReturn(), spyReturn, goldReturn);
+                })
+                .collect(Collectors.toList());
+
+        // 6. Nokta sayısını düşür ve döndür
+        return reducePoints(finalData, 10, 14);
+    }
+
+    private BigDecimal getStockPriceAtDate(String tickerSymbol, LocalDateTime date) {
+        StockPrice stockPrice = stockPriceRepository.findTopByTickerSymbolAndDateBeforeOrderByDateDesc(tickerSymbol, date);
+        return stockPrice != null ? stockPrice.getPrice() : BigDecimal.ONE; // 0 değil → 1 dön ki bölmede patlamasın
+    }
+
+    private BigDecimal getNormalizedReturn(String tickerSymbol, LocalDateTime date, BigDecimal refPrice) {
+        StockPrice stockPrice = stockPriceRepository.findTopByTickerSymbolAndDateBeforeOrderByDateDesc(tickerSymbol, date);
+        if (stockPrice == null || refPrice.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.valueOf(100); // Eğer veri yoksa 100 dön, çizgi düz gider
+        }
+
+        return stockPrice.getPrice()
+                .divide(refPrice, 6, BigDecimal.ROUND_HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+    }
+
+    private List<PortfolioReturnDTO> reducePoints(List<PortfolioReturnDTO> data, int minPoints, int maxPoints) {
+        int totalCount = data.size();
+        if (totalCount <= minPoints) {
+            return data;
+        }
+
+        int targetCount = Math.min(totalCount, maxPoints);
+        List<PortfolioReturnDTO> reduced = new ArrayList<>();
+        double step = (double) (totalCount - 1) / (targetCount - 1);
+
+        for (int i = 0; i < targetCount; i++) {
+            int index = (int) Math.round(i * step);
+            reduced.add(data.get(index));
+        }
+
+        return reduced;
+    }
+
 
 }

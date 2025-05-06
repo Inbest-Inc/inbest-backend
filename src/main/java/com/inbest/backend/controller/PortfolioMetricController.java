@@ -1,5 +1,6 @@
 package com.inbest.backend.controller;
 
+import com.inbest.backend.dto.PortfolioReturnDTO;
 import com.inbest.backend.model.response.GenericResponse;
 import com.inbest.backend.model.response.PortfolioReturnResponse;
 import com.inbest.backend.model.response.PortfolioMetricResponse;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/portfolio-metrics")
@@ -80,8 +82,12 @@ public class PortfolioMetricController {
                         .body(new GenericResponse("error", "Invalid Portfolio Id", null));
             }
 
-            List<PortfolioReturnResponse> returns = portfolioMetricService.getYearlyReturns(portfolioId);
-            return ResponseEntity.ok(new GenericResponse("success", "Yearly returns retrieved successfully", returns));
+            List<PortfolioReturnDTO> returns = portfolioMetricService.getPortfolioReturns(portfolioId);
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Yearly returns retrieved successfully",
+                    "data", returns
+            ));
         } catch (Exception e) {
             return ResponseEntity
                     .badRequest()
