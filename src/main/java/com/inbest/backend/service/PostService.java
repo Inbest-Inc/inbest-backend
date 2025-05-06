@@ -31,6 +31,7 @@ public class PostService
     private final InvestmentActivityRepository investmentActivityRepository;
     private final FollowService followService;
     private final LikeRepository likeRepository;
+    private final UserService userService;
 
     @Transactional
     public PostResponseDTO createPost(PostCreateDTO postDTO)
@@ -78,7 +79,7 @@ public class PostService
                         .orElseThrow(() -> new UserNotFoundException("User not found")))
                 .collect(Collectors.toList());
 
-        List<Post> posts = postRepository.findByUserInOrderByCreatedAtDesc(users);
+        List<Post> posts = postRepository.findPublicPostsByUsersOrderByCreatedAtDesc(users);
         if (posts.isEmpty()) {
             return new ArrayList<>();
         }
@@ -101,11 +102,21 @@ public class PostService
                 .map(this::convertToDTO);
     }
 
-    public List<PostResponseDTO> getPostsByUsername(String username)
-    {
+    public List<PostResponseDTO> getPostsByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return postRepository.findByUser(user).stream()
+
+        String currentUsername = userService.getCurrentUser().getUsername();
+
+        List<Post> posts;
+
+        if (currentUsername.equals(username)) {
+            posts = postRepository.findByUser(user);
+        } else {
+            posts = postRepository.findAllPublicPostsByUsername(username);
+        }
+
+        return posts.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -261,6 +272,6 @@ public class PostService
                         .orElseThrow(() -> new UserNotFoundException("User not found")))
                 .collect(Collectors.toList());
 
-        return postRepository.findByUserInOrderByCreatedAtDesc(users).size();
+        return postRepository.findPublicPostsByUsersOrderByCreatedAtDesc(users).size();
     }
 }

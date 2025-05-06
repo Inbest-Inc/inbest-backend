@@ -22,7 +22,13 @@ public interface PostRepository extends JpaRepository<Post, Long>
     List<Post> findAllPublicOrderByScoreDesc();
 
 
-    List<Post> findByUserInOrderByCreatedAtDesc(List<User> users);
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.user IN :users
+      AND p.investmentActivity.portfolio.visibility = 'public'
+    ORDER BY p.createdAt DESC
+    """)
+    List<Post> findPublicPostsByUsersOrderByCreatedAtDesc(@Param("users") List<User> users);
 
     List<Post> findByUserOrderByCreatedAtDesc(User user);
 
@@ -42,4 +48,11 @@ public interface PostRepository extends JpaRepository<Post, Long>
     ORDER BY p.createdAt DESC
     """)
     List<Post> findAllPublicPosts();
+    @Query("""
+    SELECT p FROM Post p
+    WHERE p.investmentActivity.portfolio.visibility = 'public'
+      AND p.user.username = :username
+    ORDER BY p.createdAt DESC
+    """)
+    List<Post> findAllPublicPostsByUsername(@Param("username") String username);
 }
