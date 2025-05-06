@@ -105,12 +105,11 @@ public class PostService
     public List<PostResponseDTO> getPostsByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        String currentUsername = userService.getCurrentUser().getUsername();
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUser = auth != null ? auth.getName() : null;
         List<Post> posts;
 
-        if (currentUsername.equals(username)) {
+        if (currentUser.equals(username)) {
             posts = postRepository.findByUser(user);
         } else {
             posts = postRepository.findAllPublicPostsByUsername(username);
