@@ -280,7 +280,7 @@ public class PortfolioStockService
         for (PortfolioStockMetric metric : metrics)
         {
             BigDecimal weightedValue = metric.getAverageCost().multiply(BigDecimal.valueOf(metric.getQuantity()));
-            BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, 32, RoundingMode.UNNECESSARY);
+            BigDecimal positionWeight = weightedValue.divide(totalWeightedValue, MathContext.DECIMAL128);
             metric.setPositionWeight(positionWeight);
             portfolioStockMetricRepository.save(metric);
         }
