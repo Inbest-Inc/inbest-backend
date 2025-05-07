@@ -31,63 +31,79 @@ public interface PortfolioMetricRepository extends JpaRepository<PortfolioMetric
             @Param("endDate") LocalDateTime endDate);
 
     @Query(value = """
-                SELECT pm.*
-                                 FROM (
-                                          SELECT DISTINCT ON (pm.portfolio_id) pm.*
-                                          FROM portfoliometrics pm
-                                          JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
-                                          WHERE p.visibility = 'public'
-                                          ORDER BY pm.portfolio_id, pm.last_updated_date DESC
-                                      ) pm
-                                 ORDER BY pm.total_return DESC
-                                 LIMIT 10;
-            
-            """, nativeQuery = true)
+    SELECT pm.* FROM (
+        SELECT DISTINCT ON (pm.portfolio_id) pm.* 
+        FROM portfoliometrics pm 
+        JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+        WHERE p.visibility = 'public'
+        AND p.portfolio_id IN (
+            SELECT ps.portfolio_id 
+            FROM portfoliostock ps 
+            GROUP BY ps.portfolio_id 
+            HAVING COUNT(DISTINCT ps.stock_id) > 0
+        )
+        ORDER BY pm.portfolio_id, pm.last_updated_date DESC
+    ) pm 
+    ORDER BY pm.total_return DESC 
+    LIMIT 10;
+    """, nativeQuery = true)
     List<PortfolioMetric> findTop10ByTotalReturnForPublic();
 
     @Query(value = """
-               SELECT pm.*
-            FROM (
-                     SELECT DISTINCT ON (pm.portfolio_id) pm.*
-                     FROM portfoliometrics pm
-                              JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
-                     WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
-                 ) pm
-            ORDER BY pm.daily_return DESC
-            LIMIT 10;
-            
-            """, nativeQuery = true)
+    SELECT pm.* FROM (
+        SELECT DISTINCT ON (pm.portfolio_id) pm.* 
+        FROM portfoliometrics pm 
+        JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+        WHERE p.visibility = 'public'
+        AND p.portfolio_id IN (
+            SELECT ps.portfolio_id 
+            FROM portfoliostock ps 
+            GROUP BY ps.portfolio_id 
+            HAVING COUNT(DISTINCT ps.stock_id) > 0
+        )
+        ORDER BY pm.portfolio_id, pm.last_updated_date DESC
+    ) pm 
+    ORDER BY pm.daily_return DESC 
+    LIMIT 10;
+    """, nativeQuery = true)
     List<PortfolioMetric> findTop10ByDailyReturnForPublic();
 
     @Query(value = """
-              SELECT pm.*
-            FROM (
-                     SELECT DISTINCT ON (pm.portfolio_id) pm.*
-                     FROM portfoliometrics pm
-                              JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
-                     WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
-                 ) pm
-            ORDER BY pm.monthly_return DESC
-            LIMIT 10;
-            
-            """, nativeQuery = true)
+    SELECT pm.* FROM (
+        SELECT DISTINCT ON (pm.portfolio_id) pm.* 
+        FROM portfoliometrics pm 
+        JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+        WHERE p.visibility = 'public'
+        AND p.portfolio_id IN (
+            SELECT ps.portfolio_id 
+            FROM portfoliostock ps 
+            GROUP BY ps.portfolio_id 
+            HAVING COUNT(DISTINCT ps.stock_id) > 0
+        )
+        ORDER BY pm.portfolio_id, pm.last_updated_date DESC
+    ) pm 
+    ORDER BY pm.monthly_return DESC 
+    LIMIT 10;
+    """, nativeQuery = true)
     List<PortfolioMetric> findTop10ByMonthlyReturnForPublic();
 
     @Query(value = """
-             SELECT pm.*
-            FROM (
-                     SELECT DISTINCT ON (pm.portfolio_id) pm.*
-                     FROM portfoliometrics pm
-                              JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
-                     WHERE p.visibility = 'public'
-                     ORDER BY pm.portfolio_id, pm.last_updated_date DESC
-                 ) pm
-            ORDER BY pm.hourly_return DESC
-            LIMIT 10;
-            
-            """, nativeQuery = true)
+    SELECT pm.* FROM (
+        SELECT DISTINCT ON (pm.portfolio_id) pm.* 
+        FROM portfoliometrics pm 
+        JOIN portfolio p ON pm.portfolio_id = p.portfolio_id
+        WHERE p.visibility = 'public'
+        AND p.portfolio_id IN (
+            SELECT ps.portfolio_id 
+            FROM portfoliostock ps 
+            GROUP BY ps.portfolio_id 
+            HAVING COUNT(DISTINCT ps.stock_id) > 0
+        )
+        ORDER BY pm.portfolio_id, pm.last_updated_date DESC
+    ) pm 
+    ORDER BY pm.hourly_return DESC 
+    LIMIT 10;
+    """, nativeQuery = true)
     List<PortfolioMetric> findTop10ByHourlyReturnForPublic();
 
 }
